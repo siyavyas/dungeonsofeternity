@@ -1,0 +1,31 @@
+# Web Framework
+flask==3.0.0
+werkzeug==3.0.1
+
+# Image Processing
+pillow==10.2.0
+
+# HTTP and Utilities
+requests==2.32.3
+python-dotenv==1.0.0
+pyyaml==6.0.1
+
+# AI and ML
+openai==1.12.0
+tiktoken==0.7.0
+crewai==0.11.0
+langchain==0.1.0
+langchain-core==0.1.27
+langchain-community==0.0.24
+langsmith==0.1.147
+
+# Game Development
+pygame==2.5.0
+
+# Optional Dependencies
+python-magic-bin==0.4.14; platform_system == "Darwin"  # For macOS
+python-magic==0.4.27; platform_system != "Darwin"  # For other platforms
+
+# Additional Dependencies
+tenacity==8.5.0
+packaging==23.2 

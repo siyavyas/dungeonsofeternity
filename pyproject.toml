@@ -1,0 +1,33 @@
+[project]
+name = "dungeonsofeternity"
+version = "0.1.0"
+description = "dungeonsofeternity using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "crewai[tools]>=0.108.0,<1.0.0",
+    "langchain-community>=0.0.24",
+    "pygame>=2.5.0",
+    "pyyaml>=6.0.1",
+    "python-dotenv>=1.0.0",
+    "openai>=1.12.0",
+    "flask>=3.0.0",
+    "Pillow>=10.0.0",
+    "requests>=2.31.0",
+    "python-magic>=0.4.27"
+]
+
+[project.scripts]
+dungeonsofeternity = "dungeonsofeternity.main:run"
+run_crew = "dungeonsofeternity.main:run"
+train = "dungeonsofeternity.main:train"
+replay = "dungeonsofeternity.main:replay"
+test = "dungeonsofeternity.main:test"
+web = "src.game.main:run_web"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"

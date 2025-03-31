@@ -1,0 +1,116 @@
+2025-03-30 16:26:15,514 - __main__ - ERROR - Game crashed: No file 'draw_card.wav' found in working directory '/Users/siyavyas/dungeonsofeternity'.
+Traceback (most recent call last):
+  File "/Users/siyavyas/dungeonsofeternity/src/game/main.py", line 46, in main
+    game.start_game()
+  File "/Users/siyavyas/dungeonsofeternity/src/game/game_launcher.py", line 79, in start_game
+    self.player1.draw_card()
+  File "/Users/siyavyas/dungeonsofeternity/src/game/game_launcher.py", line 31, in draw_card
+    self.play_sound("draw_card.wav")
+  File "/Users/siyavyas/dungeonsofeternity/src/game/game_launcher.py", line 55, in play_sound
+    sound = pygame.mixer.Sound(sound_file)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: No file 'draw_card.wav' found in working directory '/Users/siyavyas/dungeonsofeternity'.
+2025-03-30 16:40:07,357 - __main__ - ERROR - Game crashed: maximum recursion depth exceeded
+Traceback (most recent call last):
+  File "/Users/siyavyas/dungeonsofeternity/src/game/main.py", line 46, in main
+    game.start_game()
+  File "/Users/siyavyas/dungeonsofeternity/src/game/game_launcher.py", line 90, in start_game
+    self.play_turn()
+  File "/Users/siyavyas/dungeonsofeternity/src/game/game_launcher.py", line 118, in play_turn
+    self.play_turn()  # Continue to the next turn
+    ^^^^^^^^^^^^^^^^
+  File "/Users/siyavyas/dungeonsofeternity/src/game/game_launcher.py", line 118, in play_turn
+    self.play_turn()  # Continue to the next turn
+    ^^^^^^^^^^^^^^^^
+  File "/Users/siyavyas/dungeonsofeternity/src/game/game_launcher.py", line 118, in play_turn
+    self.play_turn()  # Continue to the next turn
+    ^^^^^^^^^^^^^^^^
+  [Previous line repeated 992 more times]
+  File "/Users/siyavyas/dungeonsofeternity/src/game/game_launcher.py", line 111, in play_turn
+    self.current_turn.gain_resources(1)
+  File "/Users/siyavyas/dungeonsofeternity/src/game/game_launcher.py", line 47, in gain_resources
+    self.play_sound("gain_resources.wav")
+RecursionError: maximum recursion depth exceeded
+2025-03-30 17:44:52,354 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-03-30 17:44:52,354 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-03-30 17:44:52,356 - werkzeug - INFO -  * Restarting with stat
+2025-03-30 17:44:52,897 - werkzeug - WARNING -  * Debugger is active!
+2025-03-30 17:44:52,915 - werkzeug - INFO -  * Debugger PIN: 927-969-880
+2025-03-30 17:45:56,859 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-03-30 17:45:56,859 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-03-30 17:45:56,860 - werkzeug - INFO -  * Restarting with stat
+2025-03-30 17:45:57,303 - werkzeug - WARNING -  * Debugger is active!
+2025-03-30 17:45:57,324 - werkzeug - INFO -  * Debugger PIN: 927-969-880
+2025-03-30 17:47:21,849 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-03-30 17:47:21,850 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-03-30 17:47:21,851 - werkzeug - INFO -  * Restarting with stat
+2025-03-30 17:47:22,328 - werkzeug - WARNING -  * Debugger is active!
+2025-03-30 17:47:22,343 - werkzeug - INFO -  * Debugger PIN: 927-969-880
+2025-03-30 17:50:22,142 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.1.21:8080
+2025-03-30 17:50:22,143 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-03-30 17:50:22,144 - werkzeug - INFO -  * Restarting with stat
+2025-03-30 17:50:22,653 - werkzeug - WARNING -  * Debugger is active!
+2025-03-30 17:50:22,671 - werkzeug - INFO -  * Debugger PIN: 927-969-880
+2025-03-30 17:50:32,308 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 17:50:32] "GET / HTTP/1.1" 200 -
+2025-03-30 17:50:32,358 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 17:50:32] "GET /game_state HTTP/1.1" 200 -
+2025-03-30 17:50:32,369 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 17:50:32] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-03-30 17:50:36,554 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 17:50:36] "POST /draw_card HTTP/1.1" 200 -
+2025-03-30 17:50:40,858 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 17:50:40] "POST /next_turn HTTP/1.1" 200 -
+2025-03-30 17:50:40,863 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 17:50:40] "GET /game_state HTTP/1.1" 200 -
+2025-03-30 17:50:41,904 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 17:50:41] "POST /next_turn HTTP/1.1" 200 -
+2025-03-30 17:50:41,908 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 17:50:41] "GET /game_state HTTP/1.1" 200 -
+2025-03-30 18:00:36,759 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.1.21:8080
+2025-03-30 18:00:36,760 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-03-30 18:00:36,761 - werkzeug - INFO -  * Restarting with stat
+2025-03-30 18:00:37,365 - werkzeug - WARNING -  * Debugger is active!
+2025-03-30 18:00:37,384 - werkzeug - INFO -  * Debugger PIN: 927-969-880
+2025-03-30 18:00:50,713 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 18:00:50] "GET / HTTP/1.1" 200 -
+2025-03-30 18:00:50,774 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 18:00:50] "GET /game_state HTTP/1.1" 200 -
+2025-03-30 18:04:21,569 - werkzeug - INFO -  * Detected change in '/Users/siyavyas/dungeonsofeternity/src/game/main.py', reloading
+2025-03-30 18:04:21,689 - werkzeug - INFO -  * Restarting with stat
+2025-03-30 18:04:22,464 - werkzeug - WARNING -  * Debugger is active!
+2025-03-30 18:04:22,510 - werkzeug - INFO -  * Debugger PIN: 927-969-880
+2025-03-30 18:04:34,995 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.1.21:8080
+2025-03-30 18:04:34,995 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-03-30 18:04:34,996 - werkzeug - INFO -  * Restarting with stat
+2025-03-30 18:04:35,494 - werkzeug - WARNING -  * Debugger is active!
+2025-03-30 18:04:35,509 - werkzeug - INFO -  * Debugger PIN: 927-969-880
+2025-03-30 18:04:46,505 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 18:04:46] "GET / HTTP/1.1" 200 -
+2025-03-30 18:04:46,537 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 18:04:46] "GET /game_state HTTP/1.1" 200 -
+2025-03-30 18:04:48,742 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 18:04:48] "GET / HTTP/1.1" 200 -
+2025-03-30 18:04:48,756 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 18:04:48] "GET /game_state HTTP/1.1" 200 -
+2025-03-30 19:38:23,936 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8081
+ * Running on http://192.168.1.21:8081
+2025-03-30 19:38:23,937 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-03-30 19:38:23,938 - werkzeug - INFO -  * Restarting with stat
+2025-03-30 19:38:24,430 - werkzeug - WARNING -  * Debugger is active!
+2025-03-30 19:38:24,450 - werkzeug - INFO -  * Debugger PIN: 927-969-880
+2025-03-30 19:38:41,903 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:38:41] "GET / HTTP/1.1" 200 -
+2025-03-30 19:38:41,940 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:38:41] "[33mGET /generate_character/warrior HTTP/1.1[0m" 404 -
+2025-03-30 19:38:42,065 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:38:42] "GET /game_state HTTP/1.1" 200 -
+2025-03-30 19:38:42,067 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:38:42] "[33mGET /generate_background/dungeon HTTP/1.1[0m" 404 -
+2025-03-30 19:38:42,165 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:38:42] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-03-30 19:39:27,991 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:39:27] "POST /draw_card HTTP/1.1" 200 -
+2025-03-30 19:39:28,002 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:39:28] "[33mGET /generate_card/Fireball%20(Cost:%205) HTTP/1.1[0m" 404 -
+2025-03-30 19:39:29,395 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:39:29] "POST /next_turn HTTP/1.1" 200 -
+2025-03-30 19:39:29,400 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:39:29] "GET /game_state HTTP/1.1" 200 -
+2025-03-30 19:39:30,435 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:39:30] "POST /draw_card HTTP/1.1" 200 -
+2025-03-30 19:39:30,441 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:39:30] "[33mGET /generate_card/Heal%20(Cost:%203) HTTP/1.1[0m" 404 -
+2025-03-30 19:39:31,694 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:39:31] "POST /draw_card HTTP/1.1" 200 -
+2025-03-30 19:39:31,705 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:39:31] "[33mGET /generate_card/No%20cards%20left. HTTP/1.1[0m" 404 -
+2025-03-30 19:39:32,702 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:39:32] "POST /draw_card HTTP/1.1" 200 -
+2025-03-30 19:39:32,708 - werkzeug - INFO - 127.0.0.1 - - [30/Mar/2025 19:39:32] "[33mGET /generate_card/No%20cards%20left. HTTP/1.1[0m" 404 -

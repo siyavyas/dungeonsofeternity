@@ -1,0 +1,225 @@
+core_mechanics_design:
+  description: "Generate core game mechanics: card system, movement, combat, resources, game state - optimized for web platforms"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/core_mechanics_design.py
+  agent: game_designer
+
+visual_asset_generation:
+  description: "Generate and integrate all visual assets for the game, including backgrounds, characters, and UI elements, optimized for HTML5/web platforms. Create a complete asset management system that handles loading, caching, and rendering of all game assets."
+  expected_output: "Pure executable Python code with web-compatible asset generation and management system"
+  output_file: src/game/visual_asset_generation.py
+  agent: visual_asset_generator
+
+character_asset_generation:
+  description: "Generate character sprites, animations, and visual effects for all game characters (players, enemies, NPCs) with a dark fantasy dungeon theme. Include idle, attack, and movement animations."
+  expected_output: "Pure executable Python code with web-compatible character assets and animations"
+  output_file: src/game/character_asset_generation.py
+  agent: character_artist
+
+card_visual_generation:
+  description: "Generate card visuals, effects, and animations for all game cards with a dark fantasy theme. Include card frames, icons, and special effects for different card types and rarities."
+  expected_output: "Pure executable Python code with web-compatible card visuals and effects"
+  output_file: src/game/card_visual_generation.py
+  agent: card_designer
+
+background_asset_generation:
+  description: "Generate immersive background and environment assets for different dungeon areas (entrance, corridors, boss rooms, etc.) with a dark fantasy theme. Include parallax effects and interactive elements."
+  expected_output: "Pure executable Python code with web-compatible background assets and effects"
+  output_file: src/game/background_asset_generation.py
+  agent: background_artist
+
+asset_integration:
+  description: "Integrate all visual assets into the game engine with HTML5 compatibility. Implement asset loading, caching, and rendering systems. Ensure smooth transitions between different game areas and proper display of all visual elements."
+  expected_output: "Pure executable Python code with integrated web-compatible assets and rendering system"
+  output_file: src/game/asset_integration.py
+  agent: visual_asset_generator
+
+main_implementation:
+  description: "Generate main entry point: initialization, game loop, system setup - optimized for web browsers"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/main.py
+  agent: game_engineer
+
+gameplay_implementation:
+  description: "Generate gameplay systems: card management, combat, game state, save/load - optimized for web performance"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/gameplay_implementation.py
+  agent: gameplay_programmer
+
+ui_ux_design:
+  description: "Generate UI systems: components, input handling, menus, HUD - optimized for web browsers"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/ui_ux_design.py
+  agent: ui_ux_designer
+
+puzzle_design:
+  description: "Generate puzzle systems: dungeon generation, mechanics, levels, bosses - optimized for web performance"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/puzzle_design.py
+  agent: puzzle_designer
+
+ai_system_design:
+  description: "Generate AI systems: enemy AI, pathfinding, decision making, difficulty - optimized for web performance"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/ai_system_design.py
+  agent: ai_specialist
+
+art_direction:
+  description: "Generate art systems: sprites, animations, effects, asset loading - optimized for web browsers"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/art_direction.py
+  agent: art_director
+
+sound_design:
+  description: "Generate sound systems: management, music, effects, audio loading - optimized for web browsers"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/sound_design.py
+  agent: sound_designer
+
+quality_assurance:
+  description: "Generate testing systems: framework, unit tests, integration, performance - optimized for web platforms"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/quality_assurance.py
+  agent: qa_engineer
+
+technical_documentation:
+  description: "Generate documentation systems: generator, API docs, code docs, version control - optimized for web development"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/technical_documentation.py
+  agent: technical_writer
+
+core_mechanics_implementation:
+  description: "Implement core mechanics: card system, movement, combat, resources - optimized for web browsers"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/core_mechanics_implementation.py
+  agent: gameplay_programmer
+
+game_engine_implementation:
+  description: "Implement game engine: game loop, rendering, input, resources - optimized for web platforms"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/game_engine_implementation.py
+  agent: game_engineer
+
+ui_implementation:
+  description: "Implement UI: components, input handling, menus, HUD - optimized for web browsers"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/ui_implementation.py
+  agent: ui_ux_designer
+
+ai_implementation:
+  description: "Implement AI: enemy AI, pathfinding, decisions, difficulty - optimized for web performance"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/ai_implementation.py
+  agent: ai_specialist
+
+asset_implementation:
+  description: "Implement assets: loading, sprites, animations, resources - optimized for web browsers"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/asset_implementation.py
+  agent: asset_creator
+
+system_integration:
+  description: "Implement integration: connections, components, interfaces, communication - optimized for web platforms"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/system_integration.py
+  agent: integration_specialist
+
+game_launcher:
+  description: "Implement launcher: initialization, config, save system, launch - optimized for web browsers"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/game_launcher.py
+  agent: gameplay_programmer
+
+final_integration:
+  description: "Implement final integration: systems, polish, UI, effects - optimized for web platforms"
+  expected_output: "Pure executable Python code with web compatibility"
+  output_file: src/game/final_integration.py
+  agent: integration_specialist
+
+ui_improvements:
+  description: >
+    Implement new UI elements and improve existing ones:
+    1. Add a menu button in the top-left corner
+    2. Create an instructions panel
+    3. Add a restart button
+    4. Implement proper image loading and caching
+  agent: ui_specialist
+  expected_output: >
+    Updated game interface with new UI elements and improved asset loading
+  context: >
+    The game needs better UI controls and reliable image loading
+  tools:
+    - edit_file
+    - run_terminal_cmd
+  dependencies:
+    - asset_loading_fix
+
+asset_loading_fix:
+  description: >
+    Fix image loading issues by:
+    1. Implementing proper asset caching
+    2. Adding error handling for failed image loads
+    3. Setting up a fallback system for missing assets
+  agent: asset_manager
+  expected_output: >
+    Reliable image loading system with proper error handling
+  context: >
+    Images are not displaying properly in the web game
+  tools:
+    - edit_file
+    - run_terminal_cmd
+
+web_interface_development:
+  description: >
+    Create the complete web interface for the game:
+    1. Generate HTML template with proper structure and UI elements
+    2. Implement responsive design and modern styling
+    3. Add menu system, instructions panel, and game controls
+    4. Ensure proper asset loading and caching
+  agent: ui_specialist
+  expected_output: >
+    Complete web interface with all UI elements and proper asset loading
+  context: >
+    The game needs a modern, responsive web interface with proper UI controls
+  tools:
+    - edit_file
+    - run_terminal_cmd
+  dependencies:
+    - asset_loading_fix
+
+javascript_implementation:
+  description: >
+    Implement the game's JavaScript functionality:
+    1. Create game state management
+    2. Implement card drawing and playing mechanics
+    3. Add movement and combat systems
+    4. Handle UI interactions and animations
+    5. Implement proper asset loading and caching
+  agent: ui_specialist
+  expected_output: >
+    Complete JavaScript implementation with all game functionality
+  context: >
+    The game needs client-side logic for gameplay and UI interactions
+  tools:
+    - edit_file
+    - run_terminal_cmd
+  dependencies:
+    - web_interface_development
+
+css_styling:
+  description: >
+    Create the game's visual styling:
+    1. Design responsive layout
+    2. Implement animations and transitions
+    3. Create consistent color scheme
+    4. Style UI elements and game board
+  agent: ui_specialist
+  expected_output: >
+    Complete CSS styling for the game interface
+  context: >
+    The game needs modern, responsive styling with animations
+  tools:
+    - edit_file
+    - run_terminal_cmd
+  dependencies:
+    - web_interface_development

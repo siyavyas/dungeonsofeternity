@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dungeons of Eternity</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #e74c3c;
+            --text-color: #ecf0f1;
+            --card-width: 150px;
+            --card-height: 220px;
+        }
+
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background: var(--primary-color);
+            color: var(--text-color);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        .game-container { 
+            width: 100vw; 
+            height: 100vh; 
+            position: relative;
+            background: url('/assets/backgrounds/dungeon.jpg') center/cover no-repeat;
+        }
+
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 0;
+        }
+
+        .menu-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--accent-color);
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .menu-button:hover {
+            background: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .menu-panel {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 999;
+            transition: left 0.3s ease;
+            padding: 20px;
+            box-sizing: border-box;
+            border-right: 2px solid var(--accent-color);
+        }
+
+        .menu-panel.visible {
+            left: 0;
+        }
+
+        .instructions-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 80%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1001;
+            padding: 30px;
+            border-radius: 15px;
+            display: none;
+            opacity: 0;
+            transition: all 0.3s ease;
+            border: 2px solid var(--accent-color);
+        }
+
+        .instructions-panel.visible {
+            display: block;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .game-board {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 1;
+        }
+
+        .enemy-area, .player-area {
+            width: 100%;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            border: 2px solid var(--accent-color);
+            transition: all 0.3s ease;
+        }
+
+        .enemy-area:hover, .player-area:hover {
+            transform: scale(1.02);
+        }
+
+        .board-area {
+            flex: 1;
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid var(--accent-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-bar, .mana-bar {
+            width: 100%;
+            height: 25px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            margin: 8px 0;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .health-fill {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            box-shadow: 0 0 10px #e74c3c;
+        }
+
+        .mana-fill {
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            box-shadow: 0 0 10px #3498db;
+        }
+
+        .bar-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 25px;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .hand {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            transform-style: preserve-3d;
+            border: 2px solid var(--accent-color);
+        }
+
+        .card:hover {
+            transform: translateY(-20px) rotateY(10deg);
+            box-shadow: 0 0 20px var(--accent-color);
+        }
+
+        .card.played {
+            animation: playCard 0.5s ease forwards;
+        }
+
+        @keyframes playCard {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-100px) scale(1.2); }
+            100% { transform: translateY(0) scale(1); opacity: 0; }
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .card-front {
+            background: rgba(44, 62, 80, 0.9);
+            transform: rotateY(0deg);
+        }
+
+        .card-back {
+            background: url('/assets/cards/card-back.jpg') center/cover;
+            transform: rotateY(180deg);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 60%;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            object-fit: cover;
+        }
+
+        .card-info {
+            text-align: center;
+        }
+
+        .card-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card-stats {
+            font-size: 0.8em;
+            color: #bdc3c7;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        button {
+            background: rgba(231, 76, 60, 0.8);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        button:hover {
+            background: rgba(231, 76, 60, 1);
+            transform: scale(1.1);
+            border-color: white;
+        }
+
+        .turn-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 30px;
+            border-radius: 25px;
+            z-index: 998;
+            font-weight: bold;
+            border: 2px solid var(--accent-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        .effect {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .damage-effect {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 24px;
+            animation: damageFloat 1s ease-out forwards;
+        }
+
+        .heal-effect {
+            color: #2ecc71;
+            font-weight: bold;
+            font-size: 24px;
+            animation: healFloat 1s ease-out forwards;
+        }
+
+        @keyframes damageFloat {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        @keyframes healFloat {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--accent-color);
+            border-top: 5px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="game-container">
+        <!-- Menu Button -->
+        <button class="menu-button">☰</button>
+
+        <!-- Menu Panel -->
+        <div class="menu-panel">
+            <h2>Menu</h2>
+            <button id="instructions-button">Instructions</button>
+            <button id="restart-button">Restart Game</button>
+            <button id="close-menu">Close Menu</button>
+        </div>
+
+        <!-- Instructions Panel -->
+        <div class="instructions-panel">
+            <h2>How to Play</h2>
+            <div class="instructions-content">
+                <ul>
+                    <li>Draw cards from your deck each turn</li>
+                    <li>Use mana to play cards - each card costs mana to play</li>
+                    <li>Attack your opponent to reduce their health to zero</li>
+                    <li>Defend yourself with defensive cards</li>
+                    <li>Manage your resources carefully - mana regenerates each turn</li>
+                    <li>Plan your strategy and chain card combinations</li>
+                </ul>
+            </div>
+            <button id="close-instructions">Close</button>
+        </div>
+
+        <!-- Turn Indicator -->
+        <div class="turn-indicator">Your Turn</div>
+
+        <!-- Game Board -->
+        <div class="game-board">
+            <!-- Enemy Area -->
+            <div class="enemy-area">
+                <div class="health-bar">
+                    <div class="bar-text">Enemy Health: 100/100</div>
+                    <div class="bar-fill health-fill" style="width: 100%"></div>
+                </div>
+                <div class="hand" id="enemy-hand"></div>
+            </div>
+
+            <!-- Board Area -->
+            <div class="board-area">
+                <div id="played-cards"></div>
+            </div>
+
+            <!-- Player Area -->
+            <div class="player-area">
+                <div class="health-bar">
+                    <div class="bar-text">Health: 100/100</div>
+                    <div class="bar-fill health-fill" style="width: 100%"></div>
+                </div>
+                <div class="mana-bar">
+                    <div class="bar-text">Mana: 100/100</div>
+                    <div class="bar-fill mana-fill" style="width: 100%"></div>
+                </div>
+                <div class="hand" id="player-hand"></div>
+                <div class="controls">
+                    <button id="draw-card">Draw Card</button>
+                    <button id="end-turn">End Turn</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = {
+            playerHealth: 100,
+            playerMaxHealth: 100,
+            playerMana: 100,
+            playerMaxMana: 100,
+            enemyHealth: 100,
+            enemyMaxHealth: 100,
+            playerHand: [],
+            enemyHand: [],
+            currentTurn: 'player',
+            deck: [],
+            playedCards: []
+        };
+
+        // Card definitions
+        const cardDefinitions = [
+            { id: 1, name: 'Fireball', type: 'attack', damage: 20, manaCost: 30, image: '/assets/cards/fireball.jpg' },
+            { id: 2, name: 'Shield', type: 'defense', block: 15, manaCost: 20, image: '/assets/cards/shield.jpg' },
+            { id: 3, name: 'Heal', type: 'spell', healing: 25, manaCost: 25, image: '/assets/cards/heal.jpg' },
+            { id: 4, name: 'Lightning', type: 'attack', damage: 30, manaCost: 35, image: '/assets/cards/lightning.jpg' },
+            { id: 5, name: 'Poison', type: 'spell', damage: 15, manaCost: 20, image: '/assets/cards/poison.jpg' }
+        ];
+
+        // UI Elements
+        const menuButton = document.querySelector('.menu-button');
+        const menuPanel = document.querySelector('.menu-panel');
+        const instructionsButton = document.getElementById('instructions-button');
+        const instructionsPanel = document.querySelector('.instructions-panel');
+        const closeMenuButton = document.getElementById('close-menu');
+        const closeInstructionsButton = document.getElementById('close-instructions');
+        const restartButton = document.getElementById('restart-button');
+        const drawCardButton = document.getElementById('draw-card');
+        const endTurnButton = document.getElementById('end-turn');
+        const loadingScreen = document.querySelector('.loading-screen');
+
+        // Event Listeners
+        menuButton.addEventListener('click', toggleMenu);
+        closeMenuButton.addEventListener('click', toggleMenu);
+        instructionsButton.addEventListener('click', toggleInstructions);
+        closeInstructionsButton.addEventListener('click', toggleInstructions);
+        restartButton.addEventListener('click', confirmRestart);
+        drawCardButton.addEventListener('click', drawCard);
+        endTurnButton.addEventListener('click', endTurn);
+
+        // Menu Functions
+        function toggleMenu() {
+            menuPanel.classList.toggle('visible');
+        }
+
+        function toggleInstructions() {
+            instructionsPanel.classList.toggle('visible');
+            menuPanel.classList.remove('visible');
+        }
+
+        function confirmRestart() {
+            if (confirm('Are you sure you want to restart the game? All progress will be lost.')) {
+                restartGame();
+            }
+        }
+
+        // Game Functions
+        function initializeGame() {
+            // Initialize deck
+            gameState.deck = [...cardDefinitions];
+            shuffleDeck();
+
+            // Draw initial hand
+            for (let i = 0; i < 3; i++) {
+                drawCard();
+            }
+
+            updateUI();
+            
+            // Hide loading screen
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+            }, 1000);
+        }
+
+        function shuffleDeck() {
+            for (let i = gameState.deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [gameState.deck[i], gameState.deck[j]] = [gameState.deck[j], gameState.deck[i]];
+            }
+        }
+
+        function drawCard() {
+            if (gameState.deck.length > 0 && gameState.playerHand.length < 7) {
+                const card = gameState.deck.pop();
+                gameState.playerHand.push(card);
+                createCardElement(card);
+                updateUI();
+            }
+        }
+
+        function createCardElement(cardData) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.cardId = cardData.id;
+            
+            const cardFront = document.createElement('div');
+            cardFront.className = 'card-front';
+            
+            const cardImage = document.createElement('img');
+            cardImage.className = 'card-image';
+            cardImage.src = cardData.image;
+            cardImage.alt = cardData.name;
+            
+            const cardInfo = document.createElement('div');
+            cardInfo.className = 'card-info';
+            cardInfo.innerHTML = `
+                <div class="card-name">${cardData.name}</div>
+                <div class="card-stats">
+                    ${cardData.damage ? `Damage: ${cardData.damage}<br>` : ''}
+                    ${cardData.healing ? `Heal: ${cardData.healing}<br>` : ''}
+                    ${cardData.block ? `Block: ${cardData.block}<br>` : ''}
+                    Mana: ${cardData.manaCost}
+                </div>
+            `;
+            
+            cardFront.appendChild(cardImage);
+            cardFront.appendChild(cardInfo);
+            card.appendChild(cardFront);
+            
+            card.addEventListener('click', () => playCard(cardData));
+            
+            document.getElementById('player-hand').appendChild(card);
+        }
+
+        function playCard(card) {
+            if (gameState.currentTurn !== 'player') return;
+            if (gameState.playerMana < card.manaCost) {
+                showEffect('Not enough mana!', 'damage-effect');
+                return;
+            }
+
+            // Remove card from hand
+            gameState.playerHand = gameState.playerHand.filter(c => c.id !== card.id);
+            gameState.playerMana -= card.manaCost;
+
+            // Apply card effects
+            if (card.damage) {
+                gameState.enemyHealth = Math.max(0, gameState.enemyHealth - card.damage);
+                showEffect(`-${card.damage}`, 'damage-effect', document.querySelector('.enemy-area'));
+            }
+            if (card.healing) {
+                gameState.playerHealth = Math.min(gameState.playerMaxHealth, gameState.playerHealth + card.healing);
+                showEffect(`+${card.healing}`, 'heal-effect', document.querySelector('.player-area'));
+            }
+
+            // Animate card being played
+            const cardElement = document.querySelector(`[data-card-id="${card.id}"]`);
+            cardElement.classList.add('played');
+            setTimeout(() => cardElement.remove(), 500);
+
+            updateUI();
+            checkGameEnd();
+        }
+
+        function showEffect(text, className, parent = document.body) {
+            const effect = document.createElement('div');
+            effect.className = `effect ${className}`;
+            effect.textContent = text;
+            effect.style.left = `${Math.random() * 50 + 25}%`;
+            effect.style.top = `${Math.random() * 50 + 25}%`;
+            parent.appendChild(effect);
+            setTimeout(() => effect.remove(), 1000);
+        }
+
+        function endTurn() {
+            if (gameState.currentTurn === 'player') {
+                gameState.currentTurn = 'enemy';
+                setTimeout(enemyTurn, 1000);
+            }
+            updateUI();
+        }
+
+        function enemyTurn() {
+            // Simple AI: Deal random damage to player
+            const damage = Math.floor(Math.random() * 15) + 10;
+            gameState.playerHealth = Math.max(0, gameState.playerHealth - damage);
+            showEffect(`-${damage}`, 'damage-effect', document.querySelector('.player-area'));
+            
+            setTimeout(() => {
+                gameState.currentTurn = 'player';
+                gameState.playerMana = Math.min(gameState.playerMaxMana, gameState.playerMana + 20);
+                drawCard();
+                updateUI();
+                checkGameEnd();
+            }, 1000);
+        }
+
+        function updateUI() {
+            // Update health bars
+            document.querySelector('.player-area .health-fill').style.width = `${(gameState.playerHealth / gameState.playerMaxHealth) * 100}%`;
+            document.querySelector('.enemy-area .health-fill').style.width = `${(gameState.enemyHealth / gameState.enemyMaxHealth) * 100}%`;
+            document.querySelector('.player-area .health-bar .bar-text').textContent = `Health: ${gameState.playerHealth}/${gameState.playerMaxHealth}`;
+            document.querySelector('.enemy-area .health-bar .bar-text').textContent = `Enemy Health: ${gameState.enemyHealth}/${gameState.enemyMaxHealth}`;
+            
+            // Update mana bar
+            document.querySelector('.mana-fill').style.width = `${(gameState.playerMana / gameState.playerMaxMana) * 100}%`;
+            document.querySelector('.mana-bar .bar-text').textContent = `Mana: ${gameState.playerMana}/${gameState.playerMaxMana}`;
+            
+            // Update turn indicator
+            document.querySelector('.turn-indicator').textContent = 
+                gameState.currentTurn === 'player' ? 'Your Turn' : 'Enemy Turn';
+            
+            // Update buttons
+            drawCardButton.disabled = gameState.currentTurn !== 'player';
+            endTurnButton.disabled = gameState.currentTurn !== 'player';
+        }
+
+        function checkGameEnd() {
+            if (gameState.playerHealth <= 0) {
+                alert('Game Over! You lost!');
+                restartGame();
+            } else if (gameState.enemyHealth <= 0) {
+                alert('Congratulations! You won!');
+                restartGame();
+            }
+        }
+
+        function restartGame() {
+            gameState = {
+                playerHealth: 100,
+                playerMaxHealth: 100,
+                playerMana: 100,
+                playerMaxMana: 100,
+                enemyHealth: 100,
+                enemyMaxHealth: 100,
+                playerHand: [],
+                enemyHand: [],
+                currentTurn: 'player',
+                deck: [],
+                playedCards: []
+            };
+            
+            document.getElementById('player-hand').innerHTML = '';
+            document.getElementById('enemy-hand').innerHTML = '';
+            document.getElementById('played-cards').innerHTML = '';
+            
+            initializeGame();
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', initializeGame);
+    </script>
+</body>
+</html> 
