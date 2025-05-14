@@ -1,419 +1,3418 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dungeons of Eternity</title>
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #34495e;
-            --accent-color: #e74c3c;
-            --text-color: #ecf0f1;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Puzzle Dungeon: Card Crawler</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    /* Ensure proper scrolling and layout */
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      width: 100%;
+    }
+    /* ---------- General Page & Font Styles ---------- */
+    body {
+      font-family: 'Press Start 2P', cursive;
+      background: linear-gradient(to bottom, #1a1a2e, #16213e);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    h1 {
+      color: #4ecca3;
+      text-shadow: 0 0 10px rgba(78, 204, 163, 0.5);
+      margin-bottom: 30px;
+    }
+    h2 {
+      color: #4ecca3;
+      font-size: 1.2em;
+      margin-bottom: 20px;
+      text-shadow: 0 0 5px rgba(78, 204, 163, 0.3);
+    }
+    /* ---------- Grid (Dungeon) Styles ---------- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 60px);
+      grid-template-rows: repeat(5, 60px);
+      gap: 8px;
+      margin: 20px auto;
+      background: linear-gradient(45deg, #1a1c2c, #222639);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5), inset 0 0 15px rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(5px);
+    }
+    .cell {
+      width: 60px;
+      height: 60px;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #2a2d3e, #1f2235);
+      position: relative;
+      overflow: hidden;
+    }
+    .cell::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+      opacity: 0.5;
+    }
+    .player {
+      background: linear-gradient(45deg, #4CAF50, #45a049);
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+      animation: playerPulse 2s infinite;
+    }
+    .enemy {
+      background: linear-gradient(45deg, #ff4757, #ff6b81);
+      box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+      animation: enemyFloat 3s infinite;
+      transition: transform 0.3s ease, left 0.3s ease, top 0.3s ease;
+    }
+    .enemy.moving {
+      animation: enemyMove 0.3s ease;
+    }
+    .obstacle {
+      background: linear-gradient(45deg, #7f8fa6, #718093);
+      box-shadow: 0 0 10px rgba(96, 125, 139, 0.5);
+      transform: perspective(500px) rotateX(15deg);
+    }
+    /* ---------- Card Styles (Playing Card Look) ---------- */
+    .card-container {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card-heading {
+      margin-bottom: 15px;
+    }
+    .cards {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .card {
+      width: 120px;
+      height: 180px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 10px;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+      font-size: 14px;
+      text-align: center;
+      background: url('card_image.webp') center/cover;
+    }
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom, 
+        rgba(0,0,0,0.7) 0%, 
+        rgba(0,0,0,0.3) 30%, 
+        rgba(0,0,0,0.3) 70%, 
+        rgba(0,0,0,0.7) 100%
+      );
+      z-index: 1;
+    }
+    .card-text {
+      position: relative;
+      z-index: 2;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      padding: 5px;
+      width: 100%;
+    }
+    .card.move {
+      filter: hue-rotate(240deg);
+    }
+    .card.attack {
+      filter: hue-rotate(320deg);
+    }
+    .card.teleport {
+      filter: hue-rotate(90deg);
+    }
+    .card.defense {
+      filter: hue-rotate(150deg);
+    }
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+    }
+    .card.selected {
+      transform: translateY(-15px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+    .card-content {
+      display: none;
+    }
+    /* ---------- Button Styles ---------- */
+    .game-button {
+      padding: 15px 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #4ecca3, #45b999);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .game-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+    /* ---------- Page Container Styles ---------- */
+    .page {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .page.active {
+      display: flex;
+    }
+    .title-large {
+      font-size: 48px;
+      margin-bottom: 30px;
+      animation: titleGradient 3s infinite;
+      background: linear-gradient(45deg, #4ecca3, #45b999, #4ecca3);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .game-description {
+      margin: 30px auto;
+      max-width: 600px;
+      line-height: 1.6;
+      color: #b8c6db;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 5px;
+      color: #1a1a2e;
+    }
+    .end-message {
+      font-size: 48px;
+      margin-bottom: 30px;
+      animation: fadeIn 1s ease-in;
+    }
+    /* ---------- Animations ---------- */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes glow {
+      from { text-shadow: 0 0 10px rgba(78, 204, 163, 0.5); }
+      to { text-shadow: 0 0 20px rgba(78, 204, 163, 0.8); }
+    }
+    @keyframes playerPulse {
+      0% { transform: scale(1); box-shadow: 0 0 10px rgba(76, 175, 80, 0.5); }
+      50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(76, 175, 80, 0.8); }
+      100% { transform: scale(1); box-shadow: 0 0 10px rgba(76, 175, 80, 0.5); }
+    }
+    @keyframes enemyFloat {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
+    @keyframes cardShine {
+      0% { transform: translateX(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) rotate(45deg); }
+    }
+    @keyframes titleGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* ---------- Message Area ---------- */
+    #message {
+      margin-top: 10px;
+      font-size: 18px;
+      text-shadow: 0 0 5px rgba(0,0,0,0.5);
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.2);
+      animation: messageFloat 0.5s ease-out;
+    }
+    @keyframes messageFloat {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    /* ---------- Icon Styles ---------- */
+    #landing-page {
+      background: linear-gradient(to bottom, #1a1a2e, #16213e);
+      position: relative;
+    }
+    #game-page #icon {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 60px;
+      height: 60px;
+      background-image: url('dungeondeck_icon.webp');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: 1000;
+    }
+    #game-page #icon {
+      display: none;
+    }
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      overflow-y: auto;
+    }
+    .modal-content {
+      background: linear-gradient(135deg, #1a1c2c, #222639);
+      margin: 5% auto;
+      padding: 30px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 15px;
+      width: 80%;
+      max-width: 800px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5);
+      color: #fff;
+      position: relative;
+      animation: modalFadeIn 0.3s ease-out;
+    }
+    .instructions-text {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      text-align: left;
+    }
+    .instructions-text h3 {
+      color: #4ecca3;
+      margin-top: 20px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 1.2em;
+    }
+    .instructions-text h4 {
+      color: #45b999;
+      margin-top: 15px;
+    }
+    .instructions-text ul {
+      margin-left: 20px;
+      padding-left: 20px;
+    }
+    .instructions-text li {
+      margin: 8px 0;
+    }
+    .close-button {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    .close-button:hover {
+      color: #4ecca3;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .game-controls {
+      position: static;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .game-button.small {
+      padding: 8px 16px;
+      font-size: 12px;
+    }
+    .character-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin: 30px auto;
+      max-width: 600px;
+    }
+    .character-option {
+      background: linear-gradient(135deg, #1a1c2c, #222639);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    .character-option:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      border-color: #4ecca3;
+    }
+    .character-option.selected {
+      border-color: #4ecca3;
+      box-shadow: 0 0 20px rgba(78, 204, 163, 0.5);
+    }
+    .character-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .pause-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      font-size: 48px;
+      color: #fff;
+      flex-direction: column;
+      text-align: center;
+    }
+    .pause-overlay .game-button {
+      margin-top: 20px;
+      font-size: 24px;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #4ecca3, #45b999);
+      animation: glowButton 2s infinite;
+    }
+    @keyframes glowButton {
+      0% { box-shadow: 0 0 5px rgba(78, 204, 163, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(78, 204, 163, 0.8); }
+      100% { box-shadow: 0 0 5px rgba(78, 204, 163, 0.5); }
+    }
+    @keyframes enemyMove {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1) rotate(5deg); }
+      100% { transform: scale(1); }
+    }
+    @keyframes attackHit {
+      0% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.3); filter: brightness(1.5); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+    @keyframes cardGlow {
+      0% { box-shadow: 0 0 10px rgba(78, 204, 163, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(78, 204, 163, 0.8); }
+      100% { box-shadow: 0 0 10px rgba(78, 204, 163, 0.5); }
+    }
+    .particle {
+      position: absolute;
+      pointer-events: none;
+      animation: particleFade 0.5s ease-out forwards;
+    }
+    @keyframes particleFade {
+      0% { 
+        transform: translate(0, 0) scale(1) rotate(0deg); 
+        opacity: 1; 
+      }
+      100% { 
+        transform: translate(var(--tx), var(--ty)) scale(0) rotate(var(--rotation));
+        opacity: 0; 
+      }
+    }
+    @keyframes starFloat {
+      0% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+      100% {
+        transform: translate(-100vw, 100vh) rotate(360deg);
+      }
+    }
+    .star {
+      position: fixed;
+      width: 2px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: starFloat linear infinite;
+      box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+    }
+    .star.small {
+      width: 1px;
+      height: 1px;
+      animation-duration: 15s;
+    }
+    .star.medium {
+      width: 2px;
+      height: 2px;
+      animation-duration: 20s;
+    }
+    .star.large {
+      width: 3px;
+      height: 3px;
+      animation-duration: 25s;
+    }
+    
+    /* ---------- Responsive Mobile Styles ---------- */
+    @media only screen and (max-width: 768px) {
+      .grid {
+        grid-template-columns: repeat(10, 30px);
+        grid-template-rows: repeat(5, 30px);
+        gap: 3px;
+        padding: 8px;
+      }
+      
+      .cell {
+        width: 30px;
+        height: 30px;
+        font-size: 18px;
+      }
+      
+      .card {
+        width: 70px;
+        height: 100px;
+        font-size: 10px;
+        padding: 5px;
+      }
+      
+      .game-button {
+        font-size: 10px;
+        padding: 8px 16px;
+      }
+      
+      .title-large {
+        font-size: 24px;
+      }
+      
+      .game-description {
+        font-size: 12px;
+        padding: 8px;
+      }
+      
+      .modal-content {
+        width: 90%;
+        padding: 15px;
+        margin: 10% auto;
+      }
+      
+      .instructions-text {
+        font-size: 12px;
+      }
+      
+      .character-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      
+      .character-option {
+        padding: 10px;
+      }
+      
+      .character-icon {
+        font-size: 32px;
+      }
+      
+      #game-page #icon {
+        width: 40px;
+        height: 40px;
+        top: 5px;
+        left: 5px;
+      }
+    }
 
-        body { 
-            margin: 0; 
-            padding: 0; 
-            background: var(--primary-color);
-            color: var(--text-color);
-            font-family: 'Arial', sans-serif;
-            overflow: hidden;
-        }
+    @media only screen and (max-width: 480px) {
+      .grid {
+        grid-template-columns: repeat(10, 25px);
+        grid-template-rows: repeat(5, 25px);
+        gap: 2px;
+        padding: 5px;
+      }
+      
+      .cell {
+        width: 25px;
+        height: 25px;
+        font-size: 14px;
+      }
+      
+      .card {
+        width: 60px;
+        height: 90px;
+        font-size: 8px;
+        padding: 3px;
+      }
+      
+      .game-controls {
+        flex-wrap: wrap;
+      }
+      
+      .game-button.small {
+        font-size: 8px;
+        padding: 6px 12px;
+      }
+      
+      .title-large {
+        font-size: 20px;
+      }
+      
+      .end-message {
+        font-size: 24px;
+      }
+      
+      #game-page #icon {
+        width: 30px;
+        height: 30px;
+        top: 3px;
+        left: 3px;
+      }
+    }
 
-        .game-container { 
-            width: 100vw; 
-            height: 100vh; 
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
+    /* Add fluid container width */
+    .page {
+      max-width: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+    }
 
-        .menu-button {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid var(--accent-color);
-            color: var(--text-color);
-            cursor: pointer;
-            border-radius: 8px;
-            font-size: 20px;
-            transition: all 0.3s ease;
-        }
+    /* Make grid container responsive */
+    #grid {
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
 
-        .menu-button:hover {
-            background: var(--accent-color);
-            transform: scale(1.1);
-        }
+    /* Make cards container responsive */
+    .cards {
+      max-width: 100%;
+      overflow-x: auto;
+      padding: 10px;
+      justify-content: center;
+      -webkit-overflow-scrolling: touch;
+    }
 
-        .menu-panel {
-            position: fixed;
-            top: 0;
-            left: -300px;
-            width: 300px;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 999;
-            transition: left 0.3s ease;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+    /* Add these styles for audio controls */
+    .music-icon {
+      font-size: 1.2em;
+      line-height: 1;
+    }
 
-        .menu-panel.visible {
-            left: 0;
-        }
+    #musicToggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      background: linear-gradient(135deg, #4ecca3, #45b999);
+    }
 
-        .instructions-panel {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 600px;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 1001;
-            padding: 30px;
-            border-radius: 15px;
-            display: none;
-        }
+    #musicToggle:hover {
+      transform: scale(1.1);
+    }
 
-        .instructions-panel.visible {
-            display: block;
-        }
+    .volume-controls {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      background: linear-gradient(135deg, #1a1c2c, #222639);
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1000;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
 
-        .game-board {
-            flex: 1;
-            display: grid;
-            grid-template-rows: auto 1fr auto;
-            padding: 20px;
-            gap: 20px;
-        }
+    .volume-controls.show {
+      display: flex;
+    }
 
-        .enemy-area, .player-area {
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            border-radius: 15px;
-        }
+    .volume-slider {
+      width: 100px;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 5px;
+      border-radius: 5px;
+      background: #4ecca3;
+      outline: none;
+    }
 
-        .health-bar, .mana-bar {
-            width: 100%;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
 
-        .bar-fill {
-            height: 100%;
-            transition: width 0.3s ease;
-        }
+    .volume-slider::-moz-range-thumb {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
 
-        .health-fill {
-            background: #e74c3c;
-        }
+    .volume-icon {
+      margin-left: 5px;
+      font-size: 0.8em;
+    }
 
-        .mana-fill {
-            background: #3498db;
-        }
+    /* Add these styles in the <style> section */
+    .card-holder-basket {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 130px;
+      height: 190px;
+      border: 3px dashed rgba(78, 204, 163, 0.5);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(26, 28, 44, 0.6);
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
 
-        .hand {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
+    .card-holder-basket.dragover {
+      border-color: #4ecca3;
+      background: rgba(78, 204, 163, 0.1);
+      box-shadow: 0 0 20px rgba(78, 204, 163, 0.3);
+    }
 
-        .card {
-            width: 120px;
-            height: 180px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-            box-sizing: border-box;
-        }
+    .card-holder-basket.locked {
+      border-color: rgba(255, 71, 87, 0.5);
+      background: rgba(255, 71, 87, 0.1);
+    }
 
-        .card:hover {
-            transform: translateY(-10px);
-        }
+    .card-holder-basket::before {
+      content: 'Card Holder';
+      position: absolute;
+      top: -25px;
+      font-size: 12px;
+      color: #4ecca3;
+      white-space: nowrap;
+    }
 
-        .card-emoji {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
+    .card-holder-basket.locked::before {
+      content: 'Unlocks LVL 2';
+      color: #ff4757;
+    }
 
-        .card-name {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
+    .card.draggable {
+      cursor: grab;
+    }
 
-        .card-cost {
-            color: #3498db;
-        }
+    .card.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
 
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-        }
+    .held-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
 
-        button {
-            padding: 10px 20px;
-            background: var(--accent-color);
-            border: none;
-            border-radius: 5px;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
+    .held-card .remove-button {
+      position: absolute;
+      bottom: 10px;
+      font-size: 10px;
+      padding: 5px 10px;
+      background: rgba(255, 71, 87, 0.8);
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
 
-        button:hover {
-            transform: scale(1.1);
-        }
+    .held-card .remove-button:hover {
+      background: rgba(255, 71, 87, 1);
+      transform: scale(1.1);
+    }
 
-        .turn-indicator {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px 20px;
-            border-radius: 20px;
-            z-index: 998;
-        }
-    </style>
+    .card-holder-basket.available::before {
+      content: 'Available!';
+      color: #4ecca3;
+    }
+
+    .card-holder-basket.occupied::before {
+      content: 'Occupied';
+      color: #ffd700;
+    }
+
+    .card-holder-basket.available {
+      border-color: #4ecca3;
+      animation: pulseAvailable 2s infinite;
+    }
+
+    .card-holder-basket.occupied {
+      border-color: #ffd700;
+    }
+
+    @keyframes pulseAvailable {
+      0% { box-shadow: 0 0 5px rgba(78, 204, 163, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(78, 204, 163, 0.8); }
+      100% { box-shadow: 0 0 5px rgba(78, 204, 163, 0.5); }
+    }
+
+    /* Level Complete Animation Screen */
+    .level-complete-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .level-complete-content {
+      text-align: center;
+      animation: fadeInScale 0.5s ease-out;
+    }
+
+    .level-complete-title {
+      font-size: 48px;
+      color: #4ecca3;
+      text-shadow: 0 0 10px rgba(78, 204, 163, 0.5);
+      margin-bottom: 20px;
+      animation: glowPulse 2s infinite;
+    }
+
+    .level-stats {
+      color: #fff;
+      font-size: 24px;
+      margin: 20px 0;
+    }
+
+    .continue-button {
+      padding: 15px 30px;
+      font-size: 24px;
+      background: linear-gradient(135deg, #4ecca3, #45b999);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      animation: buttonPulse 1.5s infinite;
+      margin-top: 20px;
+    }
+
+    .continue-button:hover {
+      transform: scale(1.1);
+    }
+
+    .level-complete-stars {
+      display: flex;
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .star {
+      font-size: 36px;
+      animation: starPop 0.5s ease-out;
+      animation-fill-mode: both;
+    }
+
+    .star:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .star:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes glowPulse {
+      0% { text-shadow: 0 0 10px rgba(78, 204, 163, 0.5); }
+      50% { text-shadow: 0 0 20px rgba(78, 204, 163, 0.8); }
+      100% { text-shadow: 0 0 10px rgba(78, 204, 163, 0.5); }
+    }
+
+    @keyframes buttonPulse {
+      0% { box-shadow: 0 0 0 0 rgba(78, 204, 163, 0.7); }
+      70% { box-shadow: 0 0 0 15px rgba(78, 204, 163, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(78, 204, 163, 0); }
+    }
+
+    @keyframes starPop {
+      0% { 
+        opacity: 0;
+        transform: scale(0) rotate(-180deg);
+      }
+      50% { 
+        transform: scale(1.4) rotate(-10deg);
+      }
+      100% { 
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+      }
+    }
+
+    .achievement-popup {
+      position: fixed;
+      bottom: 20px;
+      right: -300px;
+      background: linear-gradient(135deg, #1a1c2c, #222639);
+      padding: 15px;
+      border-radius: 8px;
+      border: 2px solid #4ecca3;
+      color: white;
+      box-shadow: 0 0 20px rgba(78, 204, 163, 0.3);
+      transition: right 0.5s ease-out;
+      z-index: 1001;
+    }
+
+    .achievement-popup.show {
+      right: 20px;
+    }
+
+    /* Update existing card-holder-basket styles for mobile responsiveness */
+    @media only screen and (max-width: 768px) {
+      .cards-wrapper {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .card-holder-basket {
+        width: 70px;
+        height: 100px;
+      }
+    }
+
+    @media only screen and (max-width: 480px) {
+      .card-holder-basket {
+        width: 60px;
+        height: 90px;
+      }
+    }
+
+    /* Add touch support for mobile drag and drop */
+    @media (hover: none) {
+      .card.draggable {
+        touch-action: none;
+      }
+
+      .card-holder-basket {
+        touch-action: none;
+      }
+    }
+
+    /* Add these styles for dynamic background elements */
+    .background-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -2;
+      transition: background-color 5s ease;
+    }
+
+    .cloud {
+      position: fixed;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      filter: blur(10px);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .floating-particle {
+      position: fixed;
+      width: 4px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: -1;
+      animation: floatParticle linear infinite;
+      opacity: 0.7;
+    }
+
+    @keyframes floatParticle {
+      0% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+      100% {
+        transform: translate(var(--tx), var(--ty)) rotate(var(--rotation));
+      }
+    }
+
+    .rain-drop {
+      position: fixed;
+      width: 1px;
+      height: 15px;
+      background: linear-gradient(to bottom, rgba(174, 194, 224, 0), rgba(174, 194, 224, 0.5));
+      z-index: -1;
+      pointer-events: none;
+      animation: rainFall linear infinite;
+    }
+
+    @keyframes rainFall {
+      0% {
+        transform: translateY(-20px);
+      }
+      100% {
+        transform: translateY(100vh);
+      }
+    }
+
+    .firefly {
+      position: fixed;
+      width: 3px;
+      height: 3px;
+      background: #ffff99;
+      border-radius: 50%;
+      filter: blur(1px);
+      box-shadow: 0 0 5px #ffff99, 0 0 10px #ffff99;
+      z-index: -1;
+      pointer-events: none;
+      animation: fireflyFloat 15s ease-in-out infinite;
+      opacity: 0;
+    }
+
+    @keyframes fireflyFloat {
+      0%, 100% {
+        opacity: 0;
+      }
+      50% {
+        opacity: 0.8;
+      }
+      25%, 75% {
+        opacity: 0.4;
+      }
+    }
+
+    .leaf {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      background: #4ecca3;
+      border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+      z-index: -1;
+      pointer-events: none;
+      animation: leafFall linear infinite;
+    }
+
+    @keyframes leafFall {
+      0% {
+        transform: translateY(-20px) rotate(0deg);
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+      }
+    }
+
+    /* Add these CSS styles in the style section */
+    .obstacle.thorns {
+      animation: thornPulse 2s infinite;
+      text-shadow: 0 0 10px rgba(93, 158, 49, 0.7);
+    }
+
+    .obstacle.lava {
+      animation: lavaGlow 1.5s infinite;
+      text-shadow: 0 0 15px rgba(255, 69, 0, 0.9);
+    }
+
+    .obstacle.portal {
+      animation: portalSpin 3s infinite linear;
+      text-shadow: 0 0 12px rgba(147, 112, 219, 0.8);
+    }
+
+    @keyframes thornPulse {
+      0% { transform: scale(1); text-shadow: 0 0 5px rgba(93, 158, 49, 0.5); }
+      50% { transform: scale(1.1); text-shadow: 0 0 10px rgba(93, 158, 49, 0.8); }
+      100% { transform: scale(1); text-shadow: 0 0 5px rgba(93, 158, 49, 0.5); }
+    }
+
+    @keyframes lavaGlow {
+      0% { filter: brightness(1); text-shadow: 0 0 8px rgba(255, 69, 0, 0.7); }
+      50% { filter: brightness(1.5); text-shadow: 0 0 15px rgba(255, 69, 0, 1); }
+      100% { filter: brightness(1); text-shadow: 0 0 8px rgba(255, 69, 0, 0.7); }
+    }
+
+    @keyframes portalSpin {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.2); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    .pulse {
+      animation: obstaclePulse 2s infinite;
+    }
+
+    .glow {
+      animation: obstacleGlow 1.5s infinite;
+    }
+
+    .spin {
+      animation: obstacleSpin 3s infinite linear;
+    }
+
+    @keyframes obstaclePulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes obstacleGlow {
+      0% { filter: brightness(1); }
+      50% { filter: brightness(1.5); }
+      100% { filter: brightness(1); }
+    }
+
+    @keyframes obstacleSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .tutorial-overlay {
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 8px;
+      padding: 10px;
+      max-width: 300px;
+      color: white;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      animation: tutorial-fade 0.5s ease-in-out;
+      position: absolute;
+    }
+    
+    .tutorial-content {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    
+    .tutorial-close {
+      background: #4CAF50;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    
+    .tutorial-highlight {
+      box-shadow: 0 0 15px 5px #ffff00;
+      transform: scale(1.05);
+      transition: all 0.3s ease;
+      z-index: 100;
+      position: relative;
+    }
+    
+    @keyframes tutorial-fade {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Update the score display styles */
+    .score-display {
+      position: fixed;
+      top: 20px;
+      left: 20px; /* Back to original left position */
+      background: linear-gradient(135deg, #1a1c2c, #222639);
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 2px solid rgba(78, 204, 163, 0.5);
+      color: #4ecca3;
+      font-size: 18px;
+      z-index: 1000;
+      box-shadow: 0 0 10px rgba(78, 204, 163, 0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .score-display .score-icon {
+      font-size: 24px;
+    }
+
+    .score-display .score-label {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .score-display .score-value {
+      font-family: 'Press Start 2P', cursive;
+    }
+
+    .score-display .high-score {
+      color: #ffd700;
+      font-size: 14px;
+    }
+
+    .score-display .score-change {
+      position: absolute;
+      right: -30px;
+      color: #4ecca3;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .score-display .score-change.show {
+      opacity: 1;
+      transform: translateY(-20px);
+    }
+  </style>
 </head>
 <body>
-    <div class="game-container">
-        <button class="menu-button">☰</button>
-        
-        <div class="menu-panel">
-            <h2>Menu</h2>
-            <button id="instructions-button">Instructions</button>
-            <button id="restart-button">Restart Game</button>
-            <button id="close-menu">Close Menu</button>
-        </div>
+  <!-- Add after opening body tag -->
+  <audio id="backgroundMusic" loop>
+    <source src="retro-gaming-271301.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="startButtonSound">
+    <source src="start.mp3" type="audio/mpeg">
+  </audio>
+  <!-- Add this after the existing audio elements -->
+  <audio id="gameoverSound">
+    <source src="gameover.mp3" type="audio/mpeg">
+  </audio>
+  <!-- Add this after the existing audio elements -->
+  <audio id="levelUpSound">
+    <source src="level-up.mp3" type="audio/mpeg">
+  </audio>
+  <!-- Add this after the existing audio elements -->
+  <audio id="teleportSound">
+    <source src="game-teleport.mp3" type="audio/mpeg">
+  </audio>
+  <!-- Add this after the existing audio elements -->
+  <audio id="attackFireSound">
+    <source src="attack-fire.mp3" type="audio/mpeg">
+  </audio>
+  <!-- Add this after the existing audio elements -->
+  <audio id="cardSelectionSound">
+    <source src="cardselection.mp3" type="audio/mpeg">
+  </audio>
 
-        <div class="instructions-panel">
-            <h2>How to Play</h2>
-            <p>1. Draw cards using the "Draw Card" button</p>
-            <p>2. Play cards by clicking on them (costs mana)</p>
-            <p>3. End your turn when ready</p>
-            <p>4. Defeat your opponent by reducing their health to 0</p>
-            <button id="close-instructions">Close</button>
-        </div>
-
-        <div class="turn-indicator">Your Turn</div>
-
-        <div class="game-board">
-            <div class="enemy-area">
-                <div class="health-bar">
-                    <div class="bar-fill health-fill" style="width: 100%"></div>
-                </div>
-                Enemy Health: <span id="enemy-health">100</span>
-            </div>
-
-            <div class="board-area"></div>
-
-            <div class="player-area">
-                <div class="health-bar">
-                    <div class="bar-fill health-fill" style="width: 100%"></div>
-                </div>
-                Health: <span id="player-health">100</span>
-
-                <div class="mana-bar">
-                    <div class="bar-fill mana-fill" style="width: 100%"></div>
-                </div>
-                Mana: <span id="player-mana">100</span>
-
-                <div class="hand" id="player-hand"></div>
-
-                <div class="controls">
-                    <button id="draw-card">Draw Card</button>
-                    <button id="end-turn">End Turn</button>
-                </div>
-            </div>
-        </div>
+  <!-- Landing Page -->
+  <div id="landing-page" class="page active">
+    <h1 class="title-large">Puzzle Dungeon: Card Crawler</h1>
+    <div class="game-description">
+      Welcome brave adventurer! Use your cards wisely to navigate the dungeon,
+      defeat monsters, and emerge victorious. Move strategically, attack enemies,
+      and survive to win!
     </div>
+    <button id="startGameButton" class="game-button">Start Adventure</button>
+    <button id="instructionsButton" class="game-button">Instructions</button>
+    <button id="settingsButton" class="game-button">Settings</button>
+  </div>
 
-    <script>
-        // Game state
-        const gameState = {
-            player: {
-                health: 100,
-                maxHealth: 100,
-                mana: 100,
-                maxMana: 100,
-                hand: []
-            },
-            enemy: {
-                health: 100,
-                maxHealth: 100
-            },
-            currentTurn: 'player',
-            deck: [
-                { id: 1, name: 'Fireball', emoji: '🔥', damage: 20, cost: 30 },
-                { id: 2, name: 'Shield', emoji: '🛡️', block: 15, cost: 20 },
-                { id: 3, name: 'Heal', emoji: '💚', healing: 25, cost: 25 },
-                { id: 4, name: 'Lightning', emoji: '⚡', damage: 30, cost: 35 },
-                { id: 5, name: 'Poison', emoji: '☠️', damage: 15, cost: 20 }
-            ]
+  <!-- Instructions Modal -->
+  <div id="instructions-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2>Game Instructions</h2>
+      <div class="instructions-text">
+        <h3>Objective</h3>
+        <p>Your goal is to survive the dungeon by defeating all of the enemies.</p>
+        <ul>
+          <li>Defeat all enemies to win the game.</li>
+          <li>If an enemy reaches your position, the game is over.</li>
+        </ul>
+        <h3>Game Board</h3>
+        <ul>
+          <li>The dungeon grid is a 10x5 board.</li>
+          <li>You are represented by a 🧙 (wizard icon).</li>
+          <li>Enemies are represented by 👾 (monsters).</li>
+          <li>Obstacles are represented by 🪨 (rocks) and block movement.</li>
+        </ul>
+        <h3>Your Actions</h3>
+        <p>Each turn, you'll receive three random action cards from your deck. Click on a card to play it.</p>
+        <h4>Movement Cards</h4>
+        <ul>
+          <li>Move Up: Move one tile up</li>
+          <li>Move Down: Move one tile down</li>
+          <li>Move Left: Move one tile left</li>
+          <li>Move Right: Move one tile right</li>
+          <li><em>(You cannot move onto obstacles or outside the grid.)</em></li>
+        </ul>
+        <h4>Attack Card</h4>
+        <p>Attack: Defeat enemies one tile away (adjacent tiles only).</p>
+        <p><em>If an enemy is within range, it will be removed. If no enemies are adjacent, the card is wasted.</em></p>
+        <h4>Teleport Card</h4>
+        <p>Teleport: Instantly move to a random location in the dungeon that is not occupied by an enemy or obstacle.</p>
+        <p><em>Warning: Teleporting comes with a risk as it may locate you where enemies are in range.</em></p>
+        <h3>Enemy Movement</h3>
+        <ul>
+          <li>After you play a card, enemies move closer to you.</li>
+          <li>They will chase you directly, moving horizontally or vertically towards your position.</li>
+        </ul>
+        <h3>Winning & Losing</h3>
+        <ul>
+          <li>Win: Eliminate all enemies using your attacks and smart movement.</li>
+          <li>Lose: If an enemy reaches your tile, the game ends immediately.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Page -->
+  <div id="game-page" class="page">
+    <h1>Puzzle Dungeon: Card Crawler</h1>
+    <div id="message"></div>
+    <div id="grid" class="grid"></div>
+    <div id="card-container" class="card-container">
+      <div class="cards-wrapper">
+        <div class="card-holder-basket"></div>
+        <div class="cards"></div>
+      </div>
+    </div>
+    <div class="game-controls">
+      <button id="pauseButton" class="game-button small">Pause</button>
+      <button id="resumeButton" class="game-button small" style="display: none;">Resume</button>
+      <button id="mainMenuButton" class="game-button small">Main Menu</button>
+      <button id="restartLevelButton" class="game-button small">Restart Level</button>
+      <button id="restartGameButton" class="game-button small">Restart Game</button>
+      <button id="musicToggle" class="game-button small">
+        <span class="music-icon">🔊</span>
+      </button>
+      <div class="volume-controls">
+        <input type="range" class="volume-slider" min="0" max="100" value="30">
+        <button id="muteButton" class="game-button small">
+          <span class="volume-icon">🔊</span>
+        </button>
+      </div>
+    </div>
+    <div class="score-display">
+      <div class="score-row">
+        <span class="score-icon">🏆</span>
+        <span class="score-label">Score:</span>
+        <span class="score-value">0</span>
+        <span class="score-change">+10</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">High Score:</span>
+        <span class="high-score">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Screen -->
+  <div id="end-screen" class="page">
+    <div id="end-message" class="end-message"></div>
+  </div>
+
+  <!-- Particle Effects Container -->
+  <div class="particles"></div>
+
+  <!-- Settings Page -->
+  <div id="settings-page" class="page">
+    <h1>Settings</h1>
+    <button id="characterSelectButton" class="game-button">Choose Your Character</button>
+    <button id="backToMenuButton" class="game-button">Back to Menu</button>
+  </div>
+
+  <!-- Character Selection Page -->
+  <div id="character-select-page" class="page">
+    <h1>Choose Your Character</h1>
+    <div class="character-grid">
+      <div class="character-option" data-character="🧙">
+        <span class="character-icon">🧙</span>
+        <p>Wizard</p>
+      </div>
+      <div class="character-option" data-character="🦹">
+        <span class="character-icon">🦹</span>
+        <p>Superhero</p>
+      </div>
+      <div class="character-option" data-character="🧝">
+        <span class="character-icon">🧝</span>
+        <p>Elf</p>
+      </div>
+      <div class="character-option" data-character="🤺">
+        <span class="character-icon">🤺</span>
+        <p>Swordsman</p>
+      </div>
+      <div class="character-option" data-character="🏹">
+        <span class="character-icon">🏹</span>
+        <p>Archer</p>
+      </div>
+      <div class="character-option" data-character="🧟">
+        <span class="character-icon">🧟</span>
+        <p>Zombie</p>
+      </div>
+    </div>
+    <button id="backToSettingsButton" class="game-button">Back to Settings</button>
+  </div>
+
+  <div class="level-complete-overlay">
+    <div class="level-complete-content">
+      <h2 class="level-complete-title">Level Complete!</h2>
+      <div class="level-complete-stars">
+        <div class="star">⭐</div>
+        <div class="star">⭐</div>
+        <div class="star">⭐</div>
+      </div>
+      <div class="level-stats">
+        <div id="enemiesDefeated">Enemies Defeated: 0</div>
+        <div id="movesUsed">Moves Used: 0</div>
+      </div>
+      <button class="continue-button">Continue to Level <span class="next-level-number"></span></button>
+    </div>
+  </div>
+
+  <div class="achievement-popup">
+    Level Complete! 🎉
+  </div>
+
+  <script>
+    /***********************
+     * GAME CONSTANTS & VARIABLES
+     ***********************/
+    const gridWidth = 10;
+    const gridHeight = 5;  // 5 rows
+    const HAND_SIZE = 3;
+    let level = 1;
+    let gameState = "playing"; 
+    let player = { x: 0, y: gridHeight - 1 };
+    let enemies = [];
+    let obstacles = [];
+    const cardPoolMove = [
+      { name: "Move Up", type: "move", direction: "up" },
+      { name: "Move Down", type: "move", direction: "down" },
+      { name: "Move Left", type: "move", direction: "left" },
+      { name: "Move Right", type: "move", direction: "right" }
+    ];
+    const cardPoolPowerup = [
+      { name: "Attack", type: "attack" },
+      { name: "Teleport", type: "teleport" },
+      { name: "Pause Enemies", type: "defense"},
+      { name: "Fire", type: "attack"},
+      { name: "Shield", type: "defense"}
+    ];
+
+    // Define obstacle types with properties
+    const obstacleTypes = [
+      { 
+        name: "rock", 
+        symbol: "🪨", 
+        color: "#8B8B8B", 
+        animation: "none",
+        effect: "block", // Just blocks movement
+        description: "Blocks movement" 
+      },
+      { 
+        name: "thorns", 
+        symbol: "🌵", 
+        color: "#5D9E31", 
+        animation: "pulse", 
+        effect: "damage", // Damages player if they try to move onto it
+        description: "Blocks movement and damages if you try to pass" 
+      },
+      { 
+        name: "lava", 
+        symbol: "🔥", 
+        color: "#FF4500", 
+        animation: "glow", 
+        effect: "burn", // Damages player if adjacent
+        description: "Burns adjacent players each turn" 
+      },
+      { 
+        name: "portal", 
+        symbol: "🌀", 
+        color: "#9370DB", 
+        animation: "spin", 
+        effect: "teleport", // Teleports player to random location
+        description: "Teleports player randomly if touched" 
+      }
+    ];
+
+    let hand = [];
+    let isPaused = false;
+    let selectedCharacter = '🧙'; // Default character
+
+    let shieldOn = false;
+    let pauseEnemies = false;
+    let initialEnemyPositions = [];
+    let initialObstaclePositions = [];
+    let movesUsed = 0;
+    let enemiesDefeated = 0;
+
+    const pauseButton = document.getElementById('pauseButton');
+    const resumeButton = document.getElementById('resumeButton');
+    const mainMenuButton = document.getElementById('mainMenuButton');
+    const restartLevelButton = document.getElementById('restartLevelButton');
+    const restartGameButton = document.getElementById('restartGameButton');
+    const settingsButton = document.getElementById('settingsButton');
+    const characterSelectButton = document.getElementById('characterSelectButton');
+    const backToMenuButton = document.getElementById('backToMenuButton');
+    const backToSettingsButton = document.getElementById('backToSettingsButton');
+
+    pauseButton.onclick = function() {
+      isPaused = true;
+      pauseButton.style.display = 'none';
+      resumeButton.style.display = 'inline-block';
+      pauseOverlay.style.display = 'flex';
+      
+      const resumeOverlayButton = document.createElement('button');
+      resumeOverlayButton.className = 'game-button';
+      resumeOverlayButton.textContent = 'Resume Game';
+      resumeOverlayButton.onclick = function() {
+        resumeGame();
+      };
+      pauseOverlay.innerHTML = 'PAUSED<br><br>';
+      pauseOverlay.appendChild(resumeOverlayButton);
+    };
+
+    resumeButton.onclick = resumeGame;
+
+    function resumeGame() {
+      isPaused = false;
+      resumeButton.style.display = 'none';
+      pauseButton.style.display = 'inline-block';
+      pauseOverlay.style.display = 'none';
+      pauseOverlay.innerHTML = 'PAUSED';
+    }
+
+    mainMenuButton.onclick = function() {
+      if (confirm('Return to main menu? Current progress will be lost.')) {
+        showPage('landing-page');
+        gameState = "menu";
+        pauseOverlay.style.display = 'none';
+      }
+    };
+
+    restartLevelButton.onclick = function() {
+      if (confirm('Restart this level? Current level progress will be lost.')) {
+        restartLevel();
+      }
+    };
+
+    restartGameButton.onclick = function() {
+      if (confirm('Restart entire game? All progress will be lost.')) {
+        startGame();
+      }
+    };
+
+    settingsButton.onclick = function() {
+      showPage('settings-page');
+    };
+
+    characterSelectButton.onclick = function() {
+      showPage('character-select-page');
+    };
+
+    backToMenuButton.onclick = function() {
+      showPage('landing-page');
+    };
+
+    backToSettingsButton.onclick = function() {
+      showPage('settings-page');
+    };
+
+    document.querySelectorAll('.character-option').forEach(option => {
+      option.onclick = function() {
+        document.querySelectorAll('.character-option').forEach(opt => {
+          opt.classList.remove('selected');
+        });
+        option.classList.add('selected');
+        selectedCharacter = option.dataset.character;
+        if (gameState === "playing") {
+          drawGrid();
+        }
+      };
+    });
+
+    /***********************
+     * PAGE MANAGEMENT
+     ***********************/
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+    }
+
+    /***********************
+     * GAME INITIALIZATION & LEVEL SETUP
+     ***********************/
+    function startGame() {
+      level = 1;
+      movesUsed = 0;
+      enemiesDefeated = 0;
+      currentScore = 0;
+      scoreMultiplier = 1;
+      gameState = "playing";
+      showPage('game-page');
+      
+      // Load high score
+      loadHighScore();
+      
+      // Initialize game controls
+      initGameControls();
+      
+      // Initialize dynamic background
+      initDynamicBackground();
+      
+      // Update score display
+      updateScore(0, false);
+      
+      initLevel();
+    }
+
+    function initLevel() {
+      // Reset shield status
+      shieldOn = false;
+      
+      // Store initial enemy and obstacle positions for level restart
+      initialEnemyPositions = [];
+      initialObstaclePositions = [];
+      
+      player = { x: 0, y: gridHeight - 1 };
+      enemies = [];
+      obstacles = [];
+      
+      // Generate and store initial positions
+      spawnEnemies(3 + level - 1);
+      spawnObstacles(3 + Math.floor(level/2));
+      
+      // Store initial positions
+      initialEnemyPositions = JSON.parse(JSON.stringify(enemies));
+      initialObstaclePositions = JSON.parse(JSON.stringify(obstacles));
+      
+      heldCardUsedThisLevel = false;
+      
+      // Update game controls to show/hide restart level button
+      initGameControls();
+      
+      // Add card holder basket if not already present
+      if (!document.querySelector('.card-holder-basket')) {
+        const basket = document.createElement('div');
+        basket.className = 'card-holder-basket' + (level < 2 ? ' locked' : '');
+        document.getElementById('game-page').appendChild(basket);
+        setupCardHolderBasket(basket);
+      } else {
+        document.querySelector('.card-holder-basket').className = 
+          'card-holder-basket' + (level < 2 ? ' locked' : '');
+      }
+      
+      updateCardHolderBasket();
+      drawHand();
+      updateMessage(`Level ${level} - Choose a card to play.`);
+      drawGrid();
+    }
+
+    function spawnEnemies(num) {
+      if (initialEnemyPositions && initialEnemyPositions.length > 0) {
+        // Use stored positions when restarting level
+        enemies = JSON.parse(JSON.stringify(initialEnemyPositions));
+        return;
+      }
+      
+      // Original spawning logic for new level
+      let count = 0;
+      while (count < num) {
+        let pos = { x: Math.floor(Math.random() * gridWidth), y: Math.floor(Math.random() * gridHeight) };
+        if (!isOccupied(pos.x, pos.y) && !(pos.x === player.x && pos.y === player.y)) {
+          enemies.push(pos);
+          count++;
+        }
+      }
+    }
+
+    function spawnObstacles(num) {
+      if (initialObstaclePositions && initialObstaclePositions.length > 0) {
+        // Use stored positions when restarting level
+        obstacles = JSON.parse(JSON.stringify(initialObstaclePositions));
+        return;
+      }
+      
+      // Original spawning logic for new level
+      let count = 0;
+      while (count < num) {
+        let pos = { 
+          x: Math.floor(Math.random() * gridWidth), 
+          y: Math.floor(Math.random() * gridHeight)
         };
-
-        // UI Elements
-        const menuButton = document.querySelector('.menu-button');
-        const menuPanel = document.querySelector('.menu-panel');
-        const instructionsButton = document.getElementById('instructions-button');
-        const instructionsPanel = document.querySelector('.instructions-panel');
-        const closeMenuButton = document.getElementById('close-menu');
-        const closeInstructionsButton = document.getElementById('close-instructions');
-        const restartButton = document.getElementById('restart-button');
-        const drawCardButton = document.getElementById('draw-card');
-        const endTurnButton = document.getElementById('end-turn');
-        const playerHand = document.getElementById('player-hand');
-
-        // Event Listeners
-        menuButton.addEventListener('click', toggleMenu);
-        closeMenuButton.addEventListener('click', toggleMenu);
-        instructionsButton.addEventListener('click', toggleInstructions);
-        closeInstructionsButton.addEventListener('click', toggleInstructions);
-        restartButton.addEventListener('click', restartGame);
-        drawCardButton.addEventListener('click', drawCard);
-        endTurnButton.addEventListener('click', endTurn);
-
-        // Game Functions
-        function toggleMenu() {
-            menuPanel.classList.toggle('visible');
-        }
-
-        function toggleInstructions() {
-            instructionsPanel.classList.toggle('visible');
-            menuPanel.classList.remove('visible');
-        }
-
-        function drawCard() {
-            if (gameState.deck.length > 0 && gameState.player.hand.length < 7) {
-                const randomIndex = Math.floor(Math.random() * gameState.deck.length);
-                const card = gameState.deck[randomIndex];
-                gameState.player.hand.push(card);
-                updateUI();
+        
+        // After level 5, use any random combination of obstacles
+        if (level > 5) {
+          pos.type = Math.floor(Math.random() * obstacleTypes.length);
+        } else {
+          // For levels 1-5, use the progressive difficulty system
+          pos.type = Math.min(level - 1, obstacleTypes.length - 1);
+          
+          // Ensure higher level obstacles appear less frequently in early levels
+          if (pos.type > 0) {
+            // 30% chance to downgrade to a simpler obstacle in earlier levels
+            if (Math.random() < 0.3 && level < 4) {
+              pos.type = Math.floor(Math.random() * pos.type);
             }
+          }
         }
+        
+        if (!isOccupied(pos.x, pos.y) && !(pos.x === player.x && pos.y === player.y)) {
+          obstacles.push(pos);
+          count++;
+        }
+      }
+    }
 
-        function playCard(card) {
-            if (gameState.currentTurn !== 'player') return;
-            if (gameState.player.mana < card.cost) {
-                alert('Not enough mana!');
-                return;
+    function isOccupied(x, y) {
+      for (let o of obstacles) {
+        if (o.x === x && o.y === y) return true;
+      }
+      for (let e of enemies) {
+        if (e.x === x && e.y === y) return true;
+      }
+      return false;
+    }
+
+    /***********************
+     * DRAWING THE GRID & CARDS
+     ***********************/
+    function drawGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      for (let y = 0; y < gridHeight; y++) {
+        for (let x = 0; x < gridWidth; x++) {
+          let cell = document.createElement('div');
+          cell.classList.add('cell');
+          cell.dataset.x = x;
+          cell.dataset.y = y;
+          
+          if (x === player.x && y === player.y) {
+            cell.classList.add('player');
+            cell.textContent = selectedCharacter;
+          } else if (enemies.some(e => e.x === x && e.y === y)) {
+            cell.classList.add('enemy');
+            cell.textContent = '👾';
+          } else {
+            // Check for obstacles
+            const obstacle = obstacles.find(o => o.x === x && o.y === y);
+            if (obstacle) {
+              const obstacleType = obstacleTypes[obstacle.type];
+              cell.classList.add('obstacle', obstacleType.name);
+              cell.textContent = obstacleType.symbol;
+              
+              // Add animation class if specified
+              if (obstacleType.animation !== 'none') {
+                cell.classList.add(obstacleType.animation);
+              }
+              
+              // Apply obstacle color
+              cell.style.color = obstacleType.color;
+              
+              // Add hover tooltip with description
+              cell.title = obstacleType.description;
             }
+          }
+          
+          grid.appendChild(cell);
+        }
+      }
+      
+      // Check for adjacent lava after drawing the grid
+      checkLavaEffect();
+    }
 
-            gameState.player.mana -= card.cost;
+    function drawHand() {
+      hand = [];
+      for (let i = 0; i < HAND_SIZE-1; i++) {
+        let card = cardPoolMove[Math.floor(Math.random() * cardPoolMove.length)];
+        hand.push(card);
+      }
+      let card = cardPoolPowerup[Math.floor(Math.random() * cardPoolPowerup.length)];
+        hand.push(card);
+      updateHandUI();
+    }
+
+    function updateHandUI() {
+      const container = document.getElementById('card-container');
+      container.innerHTML = "";
+      const heading = document.createElement("h2");
+      heading.classList.add("card-heading");
+      heading.textContent = "Choose a card";
+      container.appendChild(heading);
+
+      const cardsRow = document.createElement("div");
+      cardsRow.classList.add("cards");
+      hand.forEach((card, index) => {
+        const cardDiv = document.createElement("div");
+        cardDiv.classList.add("card", card.type);
+        
+        const cardText = document.createElement("div");
+        cardText.classList.add("card-text");
+        cardText.innerText = card.name;
+        cardDiv.appendChild(cardText);
+        
+        if (level >= 2) {
+          cardDiv.draggable = true;
+          cardDiv.classList.add('draggable');
+          
+          cardDiv.addEventListener('dragstart', (e) => {
+            cardDiv.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', index.toString());
+          });
+
+          cardDiv.addEventListener('dragend', () => {
+            cardDiv.classList.remove('dragging');
+          });
+        }
+        
+        cardDiv.onclick = () => {
+          document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+          cardDiv.classList.add('selected');
+          playCard(index);
+        };
+        cardsRow.appendChild(cardDiv);
+      });
+      
+      // Add held card if available
+      if (heldCard && level >= 2) {
+        const heldCardDiv = document.createElement("div");
+        heldCardDiv.classList.add("card", heldCard.type);
+        
+        const heldCardText = document.createElement("div");
+        heldCardText.classList.add("card-text");
+        heldCardText.innerText = heldCard.name + '\n(Held)';
+        heldCardDiv.appendChild(heldCardText);
+        
+        heldCardDiv.onclick = () => {
+          document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+          heldCardDiv.classList.add('selected');
+          playHeldCard();
+        };
+        cardsRow.appendChild(heldCardDiv);
+      }
+
+      if (level === 50) {
+        win()
+      }
+      
+      container.appendChild(cardsRow);
+    }
+
+    function updateMessage(text) {
+      document.getElementById('message').textContent = text;
+    }
+
+    /***********************
+     * TURN & ACTION HANDLING
+     ***********************/
+    function playCard(index) {
+      if (isPaused) return;
+
+      const cardSelection = document.getElementById('cardSelectionSound');
+      cardSelection.volume = volumeSlider.value / 100 || 0.3;
+      cardSelection.currentTime = 0;
+      cardSelection.play().catch(error => {
+        console.log("Card Selection sound playback failed:", error);
+      });
+      
+      movesUsed++;
+      let card = hand[index];
+      
+      // Store player position before move
+      const oldX = player.x;
+      const oldY = player.y;
+      
+      // Reset shield status at the beginning of each turn unless we're activating it now
+      if (card.name !== "Shield") {
+        shieldOn = false;
+      }
+      
+      let moveSuccessful = false;
+      
+      if (card.type === "move") {
+        moveSuccessful = handleMove(card.direction);
+      } else if (card.type === "attack") {
+        moveSuccessful = handleAttack(card.name);
+      } else if (card.type === "teleport") {
+        moveSuccessful = handleTeleport();
+      } else if (card.type === "defense") {
+        moveSuccessful = handleDefense(card.name);
+      }
+      
+      // Check if player was attacked
+      let wasAttacked = false;
+      for (let enemy of enemies) {
+        if (enemy.x === player.x && enemy.y === player.y) {
+          wasAttacked = true;
+          break;
+        }
+      }
+      
+      // Update score based on move success and attack status
+      if (wasAttacked) {
+        updateScore(0); // Reset score if attacked
+      } else if (moveSuccessful) {
+        updateScore(10); // Add points for successful move
+      }
+      
+      enemyTurn();
+      drawGrid();
+      checkGameState();
+      if (gameState === "playing") {
+        drawHand();
+      }
+    }
+
+    function handleMove(direction) {
+      let dx = 0, dy = 0;
+      if (direction === "up") dy = -1;
+      else if (direction === "down") dy = 1;
+      else if (direction === "left") dx = -1;
+      else if (direction === "right") dx = 1;
+
+      let newX = player.x + dx;
+      let newY = player.y + dy;
+      
+      if (newX < 0 || newX >= gridWidth || newY < 0 || newY >= gridHeight) {
+        updateMessage("You cannot move off the grid!");
+        return false;
+      }
+      
+      // Check if there's an obstacle at the new position
+      const obstacle = obstacles.find(o => o.x === newX && o.y === newY);
+      if (obstacle) {
+        const obstacleType = obstacleTypes[obstacle.type];
+        
+        // Handle different obstacle effects
+        switch (obstacleType.effect) {
+          case "block":
+            updateMessage(`A ${obstacleType.name} blocks your way!`);
+            return false;
             
-            if (card.damage) {
-                gameState.enemy.health = Math.max(0, gameState.enemy.health - card.damage);
+          case "damage":
+            if (!shieldOn) {
+              updateMessage(`The ${obstacleType.name} damages you!`);
+              createParticleEffect(
+                player.x * document.querySelector('.cell').offsetWidth + document.querySelector('.cell').offsetWidth/2,
+                player.y * document.querySelector('.cell').offsetHeight + document.querySelector('.cell').offsetHeight/2,
+                '#ff4757'
+              );
+              return false;
+            } else {
+              updateMessage(`Your shield protects you from the ${obstacleType.name}!`);
+              shieldOn = false;
+              return false;
             }
-            if (card.healing) {
-                gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + card.healing);
-            }
-            if (card.block) {
-                // Add block mechanic here
-            }
-
-            // Remove card from hand
-            const cardIndex = gameState.player.hand.findIndex(c => c.id === card.id);
-            if (cardIndex !== -1) {
-                gameState.player.hand.splice(cardIndex, 1);
-            }
-
-            updateUI();
-            checkGameEnd();
+            
+          case "teleport":
+            updateMessage(`The ${obstacleType.name} teleports you randomly!`);
+            return handleTeleport();
+            
+          default:
+            updateMessage(`An obstacle blocks your way!`);
+            return false;
         }
+      }
+      
+      player.x = newX;
+      player.y = newY;
+      updateMessage(`Moved ${direction}.`);
+      return true;
+    }
 
-        function endTurn() {
-            if (gameState.currentTurn === 'player') {
-                gameState.currentTurn = 'enemy';
-                document.querySelector('.turn-indicator').textContent = 'Enemy Turn';
-                setTimeout(enemyTurn, 1000);
+    function handleAttack(name) {
+      let removed = [];
+      let success = false;
+      
+      enemies = enemies.filter(enemy => {
+        if (Math.abs(enemy.x - player.x) <= 1 && Math.abs(enemy.y - player.y) <= 1) {
+          removed.push(enemy);
+          enemiesDefeated++;
+          success = true;
+          
+          // Play attack fire sound when enemy is defeated
+          const attackFireSound = document.getElementById('attackFireSound');
+          attackFireSound.volume = volumeSlider.value / 100 || 0.3;
+          attackFireSound.currentTime = 0;
+          attackFireSound.play().catch(error => {
+            console.log("Attack fire sound playback failed:", error);
+          });
+          
+          const enemyCell = document.querySelector(`.cell[data-x="${enemy.x}"][data-y="${enemy.y}"]`);
+          if (enemyCell) {
+            const rect = enemyCell.getBoundingClientRect();
+            createParticleEffect(rect.left + rect.width/2, rect.top + rect.height/2);
+          }
+          return false;
+        }
+        return true;
+      });
+      
+      if (removed.length > 0) {
+        updateMessage(`Attack hit ${removed.length} enemy(ies)!`);
+      } else {
+        updateMessage("Attack missed. No enemy in range.");
+      }
+      
+      return success;
+    }
+
+    function handleTeleport() {
+      // Play teleport sound
+      const teleportSound = document.getElementById('teleportSound');
+      teleportSound.volume = volumeSlider.value / 100 || 0.3;
+      teleportSound.play().catch(error => {
+        console.log("Teleport sound playback failed:", error);
+      });
+      
+      let validTiles = [];
+      for (let x = 0; x < gridWidth; x++) {
+        for (let y = 0; y < gridHeight; y++) {
+          if (x === player.x && y === player.y) continue;
+          if (!isOccupied(x, y) && !obstacles.some(o => o.x === x && o.y === y)) {
+            validTiles.push({ x, y });
+          }
+        }
+      }
+      if (validTiles.length > 0) {
+        let pos = validTiles[Math.floor(Math.random() * validTiles.length)];
+        player.x = pos.x;
+        player.y = pos.y;
+        updateMessage("Teleported to a new location!");
+        return true;
+      } else {
+        updateMessage("No valid space to teleport!");
+        return false;
+      }
+    }
+
+    function handleDefense(name) {
+      if (name === "Shield") {
+        shieldOn = true;
+        
+        // Find and mark adjacent enemies as frozen
+        enemies.forEach(enemy => {
+          if (Math.abs(enemy.x - player.x) <= 1 && Math.abs(enemy.y - player.y) <= 1) {
+            enemy.frozen = true;
+          }
+        });
+        
+        updateMessage("Shield activated! Adjacent enemies frozen and you're protected.");
+        return true;
+      } else if (name === "Pause Enemies") {
+        pauseEnemies = true;
+        updateMessage("All enemies paused for one turn!");
+        return true;
+      }
+      return false;
+    }
+
+    function enemyTurn() {
+      if (pauseEnemies === false) {
+        enemies.forEach(enemy => {
+          // Skip movement for frozen enemies (from shield)
+          if (enemy.frozen) {
+            enemy.frozen = false; // Unfreeze for next turn
+            return;
+          }
+          
+          const oldX = enemy.x;
+          const oldY = enemy.y;
+          let dx = player.x - enemy.x;
+          let dy = player.y - enemy.y;
+          let moveX = 0, moveY = 0;
+          if (Math.abs(dx) >= Math.abs(dy)) {
+            moveX = dx > 0 ? 1 : (dx < 0 ? -1 : 0);
+          } else {
+            moveY = dy > 0 ? 1 : (dy < 0 ? -1 : 0);
+          }
+          let newX = enemy.x + moveX;
+          let newY = enemy.y + moveY;
+          if (canEnemyMoveTo(newX, newY)) {
+            enemy.x = newX;
+            enemy.y = newY;
+          } else {
+            if (moveX !== 0) {
+              newX = enemy.x;
+              newY = enemy.y + (dy > 0 ? 1 : (dy < 0 ? -1 : 0));
+            } else if (moveY !== 0) {
+              newX = enemy.x + (dx > 0 ? 1 : (dx < 0 ? -1 : 0));
+              newY = enemy.y;
             }
-        }
+            if (canEnemyMoveTo(newX, newY)) {
+              enemy.x = newX;
+              enemy.y = newY;
+            }
+          }
+          if (oldX !== enemy.x || oldY !== enemy.y) {
+            const enemyCell = document.querySelector(`.cell[data-x="${enemy.x}"][data-y="${enemy.y}"]`);
+            if (enemyCell) {
+              enemyCell.classList.add('moving');
+              setTimeout(() => enemyCell.classList.remove('moving'), 300);
+            }
+          }
+        });
+      } else {
+        pauseEnemies = false;
+      }
+      
+      // Check for obstacle effects after enemy movement
+      checkLavaEffect();
+      
+      // Move portal obstacles (they move after each turn)
+      movePortalObstacles();
+    }
 
-        function enemyTurn() {
-            // Simple AI: Deal random damage
-            const damage = Math.floor(Math.random() * 15) + 10;
-            gameState.player.health = Math.max(0, gameState.player.health - damage);
-            
-            setTimeout(() => {
-                gameState.currentTurn = 'player';
-                document.querySelector('.turn-indicator').textContent = 'Your Turn';
-                gameState.player.mana = Math.min(gameState.player.maxMana, gameState.player.mana + 20);
-                updateUI();
-                checkGameEnd();
-            }, 1000);
-        }
+    function canEnemyMoveTo(x, y) {
+      if (x < 0 || x >= gridWidth || y < 0 || y >= gridHeight) return false;
+      if (obstacles.some(o => o.x === x && o.y === y)) return false;
+      if (enemies.some(e => e.x === x && e.y === y)) return false;
+      return true;
+    }
 
-        function updateUI() {
-            // Update health bars
-            document.querySelector('.player-area .health-fill').style.width = 
-                `${(gameState.player.health / gameState.player.maxHealth) * 100}%`;
-            document.querySelector('.enemy-area .health-fill').style.width = 
-                `${(gameState.enemy.health / gameState.enemy.maxHealth) * 100}%`;
+    function checkGameState() {
+      for (let enemy of enemies) {
+        if (enemy.x === player.x && enemy.y === player.y) {
+          if (shieldOn === false) {
+            gameOver();
+            return;
+          } else {
+            // Shield protects player from death
+            shieldOn = false;
             
-            // Update text displays
-            document.getElementById('player-health').textContent = gameState.player.health;
-            document.getElementById('enemy-health').textContent = gameState.enemy.health;
-            document.getElementById('player-mana').textContent = gameState.player.mana;
+            // Push the enemy back to its previous position or a random adjacent tile
+            const validTiles = [];
+            for (let dx = -1; dx <= 1; dx++) {
+              for (let dy = -1; dy <= 1; dy++) {
+                if (dx === 0 && dy === 0) continue; // Skip player's position
+                
+                const newX = player.x + dx;
+                const newY = player.y + dy;
+                
+                if (newX >= 0 && newX < gridWidth && 
+                    newY >= 0 && newY < gridHeight && 
+                    !isOccupied(newX, newY)) {
+                  validTiles.push({x: newX, y: newY});
+                }
+              }
+            }
             
-            // Update mana bar
-            document.querySelector('.mana-fill').style.width = 
-                `${(gameState.player.mana / gameState.player.maxMana) * 100}%`;
+            if (validTiles.length > 0) {
+              // Move enemy to a random valid adjacent tile
+              const newPos = validTiles[Math.floor(Math.random() * validTiles.length)];
+              enemy.x = newPos.x;
+              enemy.y = newPos.y;
+              updateMessage("Your shield protected you from the enemy!");
+            } else {
+              // If no valid tiles, just remove the enemy
+              enemies = enemies.filter(e => e !== enemy);
+              enemiesDefeated++;
+              updateMessage("Your shield destroyed the enemy!");
+            }
+            return;
+          }
+        }
+      }
+      if (enemies.length === 0) {
+        levelComplete();
+      }
+    }
+
+    function gameOver() {
+      gameState = "gameover";
+      updateMessage("Game Over! An enemy reached you.");
+      
+      // Play game over sound and handle background music
+      const gameoverSound = document.getElementById('gameoverSound');
+      const bgMusic = document.getElementById('backgroundMusic');
+      
+      if (isMusicPlaying) {
+        bgMusic.pause();
+      }
+      
+      gameoverSound.volume = volumeSlider.value / 100 || 0.3;
+      gameoverSound.play().then(() => {
+        // When game over sound finishes, resume background music if it was playing
+        gameoverSound.addEventListener('ended', () => {
+          if (isMusicPlaying) {
+            bgMusic.play();
+          }
+        }, { once: true });
+        
+        showEndScreen(false);
+      }).catch(error => {
+        console.log("Game over sound playback failed:", error);
+        // If sound fails to play, still show end screen
+        if (isMusicPlaying) {
+          bgMusic.play();
+        }
+        showEndScreen(false);
+      });
+    }
+
+    function win() {
+      gameState = "win";
+      updateMessage("Congratulations! You won!");
+      
+      // Play sound and handle background music
+      const bgMusic = document.getElementById('backgroundMusic');
+      showEndScreen(true);
+    }
+
+    function levelComplete() {
+      // Play level up sound and handle background music
+      const levelUpSound = document.getElementById('levelUpSound');
+      const bgMusic = document.getElementById('backgroundMusic');
+      
+      if (isMusicPlaying) {
+        bgMusic.pause();
+      }
+      
+      levelUpSound.volume = volumeSlider.value / 100 || 0.3;
+      levelUpSound.play().then(() => {
+        // When level up sound finishes, resume background music if it was playing
+        levelUpSound.addEventListener('ended', () => {
+          if (isMusicPlaying) {
+            bgMusic.play();
+          }
+        }, { once: true });
+        
+        // Continue with level complete UI
+        const overlay = document.querySelector('.level-complete-overlay');
+        const nextLevelSpan = overlay.querySelector('.next-level-number');
+        const enemiesDefeatedDiv = document.getElementById('enemiesDefeated');
+        const movesUsedDiv = document.getElementById('movesUsed');
+        
+        // Update stats
+        enemiesDefeatedDiv.textContent = `Enemies Defeated: ${enemiesDefeated}`;
+        movesUsedDiv.textContent = `Moves Used: ${movesUsed}`;
+        movesUsedDiv.innerHTML += `<br>Score: ${Math.floor(currentScore)}`;
+        movesUsedDiv.innerHTML += `<br>High Score: ${Math.floor(highScore)}`;
+        nextLevelSpan.textContent = level + 1;
+        
+        // Show overlay with animation
+        overlay.style.display = 'flex';
+        
+        // Show achievement popup
+        const popup = document.querySelector('.achievement-popup');
+        popup.classList.add('show');
+        setTimeout(() => popup.classList.remove('show'), 3000);
+        
+        // Add continue button listener
+        const continueButton = overlay.querySelector('.continue-button');
+        continueButton.onclick = () => {
+          overlay.style.display = 'none';
+          level++;
+          movesUsed = 0;
+          enemiesDefeated = 0;
+          initLevel();
+        };
+      }).catch(error => {
+        console.log("Level up sound playback failed:", error);
+        // If sound fails to play, still show level complete UI
+        if (isMusicPlaying) {
+          bgMusic.play();
+        }
+        
+        // Continue with level complete UI (same code as above)
+        const overlay = document.querySelector('.level-complete-overlay');
+        const nextLevelSpan = overlay.querySelector('.next-level-number');
+        const enemiesDefeatedDiv = document.getElementById('enemiesDefeated');
+        const movesUsedDiv = document.getElementById('movesUsed');
+        
+        enemiesDefeatedDiv.textContent = `Enemies Defeated: ${enemiesDefeated}`;
+        movesUsedDiv.textContent = `Moves Used: ${movesUsed}`;
+        movesUsedDiv.innerHTML += `<br>Score: ${Math.floor(currentScore)}`;
+        movesUsedDiv.innerHTML += `<br>High Score: ${Math.floor(highScore)}`;
+        nextLevelSpan.textContent = level + 1;
+        
+        overlay.style.display = 'flex';
+        
+        const popup = document.querySelector('.achievement-popup');
+        popup.classList.add('show');
+        setTimeout(() => popup.classList.remove('show'), 3000);
+        
+        const continueButton = overlay.querySelector('.continue-button');
+        continueButton.onclick = () => {
+          overlay.style.display = 'none';
+          level++;
+          movesUsed = 0;
+          enemiesDefeated = 0;
+          initLevel();
+        };
+      });
+    }
+
+    function showEndScreen(isWin) {
+      showPage('end-screen');
+      const endScreen = document.getElementById('end-screen');
+      endScreen.innerHTML = "";
+      
+      // Create image element
+      const image = document.createElement('img');
+      image.src = isWin ? 'youwin.png' : 'gameover.png';
+      image.alt = isWin ? 'You Win!' : 'Game Over!';
+      image.style.maxWidth = '80%';
+      image.style.maxHeight = '60vh';
+      image.style.marginBottom = '20px';
+      endScreen.appendChild(image);
+      
+      const message = document.createElement('div');
+      message.classList.add('end-message');
+      message.textContent = isWin ? "Congratulations! You Win!" : "Game Over!";
+      endScreen.appendChild(message);
+      
+      // Add restart level button for level 4+ when player loses
+      if (!isWin && level >= 4) {
+        const restartLevelButton = document.createElement('button');
+        restartLevelButton.classList.add('game-button');
+        restartLevelButton.textContent = "Restart Level";
+        restartLevelButton.onclick = function() {
+          showPage('game-page');
+          restartLevel();
+        };
+        endScreen.appendChild(restartLevelButton);
+      }
+      
+      const restartButton = document.createElement('button');
+      restartButton.classList.add('game-button');
+      restartButton.textContent = "Restart Game";
+      restartButton.onclick = startGame;
+      endScreen.appendChild(restartButton);
+    }
+
+    /***********************
+     * EVENT LISTENERS & PARTICLE EFFECTS
+     ***********************/
+    const backgroundMusic = document.getElementById('backgroundMusic');
+    const musicToggle = document.getElementById('musicToggle');
+    const volumeControls = document.querySelector('.volume-controls');
+    const volumeSlider = document.querySelector('.volume-slider');
+    const muteButton = document.getElementById('muteButton');
+    let isMusicPlaying = false;
+    let previousVolume = 0.3;
+
+    function toggleMusic() {
+      if (isMusicPlaying) {
+        backgroundMusic.pause();
+        musicToggle.querySelector('.music-icon').textContent = '🔈';
+        volumeControls.classList.remove('show');
+      } else {
+        backgroundMusic.volume = volumeSlider.value / 100;
+        backgroundMusic.play().catch(error => {
+          console.log("Audio playback failed:", error);
+        });
+        musicToggle.querySelector('.music-icon').textContent = '🔊';
+      }
+      isMusicPlaying = !isMusicPlaying;
+    }
+
+    musicToggle.addEventListener('click', (e) => {
+      volumeControls.classList.toggle('show');
+      e.stopPropagation();
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+      const volume = e.target.value / 100;
+      backgroundMusic.volume = volume;
+      previousVolume = volume;
+      updateVolumeIcon(volume);
+    });
+
+    muteButton.addEventListener('click', () => {
+      if (backgroundMusic.volume > 0) {
+        previousVolume = backgroundMusic.volume;
+        backgroundMusic.volume = 0;
+        volumeSlider.value = 0;
+        muteButton.querySelector('.volume-icon').textContent = '🔇';
+      } else {
+        backgroundMusic.volume = previousVolume;
+        volumeSlider.value = previousVolume * 100;
+        muteButton.querySelector('.volume-icon').textContent = '🔊';
+      }
+    });
+
+    function updateVolumeIcon(volume) {
+      const icon = muteButton.querySelector('.volume-icon');
+      if (volume === 0) {
+        icon.textContent = '🔇';
+      } else if (volume < 0.3) {
+        icon.textContent = '🔈';
+      } else if (volume < 0.7) {
+        icon.textContent = '🔉';
+      } else {
+        icon.textContent = '🔊';
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!volumeControls.contains(e.target) && !musicToggle.contains(e.target)) {
+        volumeControls.classList.remove('show');
+      }
+    });
+
+    document.getElementById('startGameButton').addEventListener('click', () => {
+      // Play start button sound and pause background music temporarily
+      const startSound = document.getElementById('startButtonSound');
+      const bgMusic = document.getElementById('backgroundMusic');
+      
+      if (isMusicPlaying) {
+        bgMusic.pause();
+      }
+      
+      startSound.volume = volumeSlider.value / 100 || 0.3;
+      startSound.play().then(() => {
+        // When start sound finishes, resume background music if it was playing
+        startSound.addEventListener('ended', () => {
+          if (isMusicPlaying) {
+            bgMusic.play();
+          }
+        }, { once: true });
+        
+        createParticles();
+        maintainStars();
+        startGame(); // This will now call initDynamicBackground()
+      }).catch(error => {
+        console.log("Start sound playback failed:", error);
+        // If sound fails to play, still start the game
+        if (isMusicPlaying) {
+          bgMusic.play();
+        }
+        createParticles();
+        maintainStars();
+        startGame();
+      });
+      
+      // If music wasn't already playing, toggle it on
+      if (!isMusicPlaying) {
+        toggleMusic();
+      }
+    });
+
+    function createParticles() {
+      const particles = document.querySelector('.particles');
+      particles.innerHTML = '';
+      const particleCount = 100;
+
+      // Create multiple layers of particles for depth
+      for (let i = 0; i < particleCount; i++) {
+        const star = document.createElement('div');
+        
+        // Randomize size with weighted distribution
+        const sizeClass = Math.random() < 0.3 ? 'large' : 
+                         Math.random() < 0.6 ? 'medium' : 'small';
+        star.className = `star ${sizeClass}`;
+        
+        // Distribute stars across a wider area
+        star.style.left = `${Math.random() * 200}vw`;
+        star.style.top = `${Math.random() * 100}vh`;
+        
+        // Add variety to the star appearance
+        const opacity = 0.5 + Math.random() * 0.5;
+        const hue = 190 + Math.random() * 40; // Blue-ish hue range
+        star.style.background = `hsla(${hue}, 100%, 90%, ${opacity})`;
+        star.style.boxShadow = `0 0 ${2 + Math.random() * 4}px hsla(${hue}, 100%, 90%, ${opacity})`;
+        
+        // Randomize animation timing
+        star.style.animationDelay = `${Math.random() * -20}s`;
+        
+        // Add transform origin for better rotation
+        star.style.transformOrigin = 'center center';
+        
+        // Add custom properties for dynamic movement
+        star.style.setProperty('--rotate-speed', `${Math.random() * 360}deg`);
+        star.style.setProperty('--float-distance', `${50 + Math.random() * 100}px`);
+        
+        particles.appendChild(star);
+      }
+    }
+
+    function maintainStars() {
+      // Create new stars periodically
+      setInterval(() => {
+        const particles = document.querySelector('.particles');
+        
+        // Remove some old stars
+        const oldStars = particles.children;
+        for (let i = 0; i < 10; i++) {
+          if (oldStars.length > 0) {
+            const randomIndex = Math.floor(Math.random() * oldStars.length);
+            oldStars[randomIndex].remove();
+          }
+        }
+        
+        // Add new stars
+        for (let i = 0; i < 15; i++) {
+          const star = document.createElement('div');
+          const sizeClass = Math.random() < 0.3 ? 'large' : 
+                           Math.random() < 0.6 ? 'medium' : 'small';
+          star.className = `star ${sizeClass}`;
+          
+          // Start from the right side of the screen
+          star.style.left = '200vw';
+          star.style.top = `${Math.random() * 100}vh`;
+          
+          const opacity = 0.5 + Math.random() * 0.5;
+          const hue = 190 + Math.random() * 40;
+          star.style.background = `hsla(${hue}, 100%, 90%, ${opacity})`;
+          star.style.boxShadow = `0 0 ${2 + Math.random() * 4}px hsla(${hue}, 100%, 90%, ${opacity})`;
+          
+          // Random animation delay
+          star.style.animationDelay = '0s';
+          
+          particles.appendChild(star);
+        }
+      }, 2000); // Add new stars every 2 seconds
+    }
+
+    // Initialize particles on page load
+    window.addEventListener('load', () => {
+      createParticles();
+      maintainStars();
+      
+      // Create the particles container if it doesn't exist
+      if (!document.querySelector('.particles')) {
+        const particlesContainer = document.createElement('div');
+        particlesContainer.className = 'particles';
+        document.body.appendChild(particlesContainer);
+      }
+    });
+
+    const modal = document.getElementById('instructions-modal');
+    const instructionsButton = document.getElementById('instructionsButton');
+    const closeButton = document.querySelector('.close-button');
+
+    instructionsButton.onclick = function() {
+      modal.style.display = "block";
+    };
+
+    closeButton.onclick = function() {
+      modal.style.display = "none";
+    };
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    };
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === "Escape" && modal.style.display === "block") {
+        modal.style.display = "none";
+      }
+    });
+
+    function createParticleEffect(x, y, color = '#ff4757') {
+      const particleCount = 15;
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        // More dynamic angle calculation
+        const angle = (Math.random() * 360) * Math.PI / 180;
+        const distance = Math.random() * 50;
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance;
+        
+        // Add rotation to particles
+        const rotation = Math.random() * 360;
+        
+        particle.style.cssText = `
+          left: ${x}px;
+          top: ${y}px;
+          width: ${Math.random() * 6 + 2}px;
+          height: ${Math.random() * 6 + 2}px;
+          background: ${color};
+          border-radius: 50%;
+          transform: rotate(${rotation}deg);
+          --tx: ${tx}px;
+          --ty: ${ty}px;
+          --rotation: ${rotation + Math.random() * 360}deg;
+        `;
+        
+        document.body.appendChild(particle);
+        setTimeout(() => particle.remove(), 500);
+      }
+    }
+
+    let heldCard = null;
+    let heldCardUsedThisLevel = false;
+
+    function setupCardHolderBasket(basket) {
+      basket.addEventListener('dragover', (e) => {
+        if (level < 2 || (heldCard && !heldCardUsedThisLevel)) return;
+        e.preventDefault();
+        basket.classList.add('dragover');
+      });
+
+      basket.addEventListener('dragleave', () => {
+        basket.classList.remove('dragover');
+      });
+
+      basket.addEventListener('drop', (e) => {
+        if (level < 2 || (heldCard && !heldCardUsedThisLevel)) return;
+        e.preventDefault();
+        basket.classList.remove('dragover');
+        
+        const cardIndex = parseInt(e.dataTransfer.getData('text/plain'));
+        if (!isNaN(cardIndex) && cardIndex >= 0 && cardIndex < hand.length) {
+          heldCard = hand[cardIndex];
+          heldCardUsedThisLevel = false;
+          updateCardHolderBasket();
+          drawHand();
+        }
+      });
+    }
+
+    function updateCardHolderBasket() {
+      const basket = document.querySelector('.card-holder-basket');
+      basket.innerHTML = '';
+      
+      if (heldCard) {
+        const heldCardContainer = document.createElement('div');
+        heldCardContainer.className = 'held-card';
+        
+        const cardDiv = document.createElement('div');
+        cardDiv.classList.add('card', heldCard.type);
+        cardDiv.innerText = heldCard.name;
+        
+        if (!heldCardUsedThisLevel) {
+          const removeButton = document.createElement('button');
+          removeButton.className = 'remove-button';
+          removeButton.innerText = 'Remove';
+          removeButton.onclick = () => {
+            heldCard = null;
+            updateCardHolderBasket();
+            drawHand();
+          };
+          heldCardContainer.appendChild(removeButton);
+        }
+        
+        heldCardContainer.appendChild(cardDiv);
+        basket.appendChild(heldCardContainer);
+      }
+      
+      if (level >= 2) {
+        if (heldCard && !heldCardUsedThisLevel) {
+          basket.classList.add('occupied');
+          basket.classList.remove('available');
+        } else {
+          basket.classList.remove('occupied');
+          basket.classList.add('available');
+        }
+      }
+    }
+
+    function playHeldCard() {
+      if (isPaused || !heldCard) return;
+      
+      movesUsed++;
+      
+      // Reset shield status at the beginning of each turn unless we're activating it now
+      if (heldCard.name !== "Shield") {
+        shieldOn = false;
+      }
+      
+      if (heldCard.type === "move") {
+        handleMove(heldCard.direction);
+      } else if (heldCard.type === "attack") {
+        handleAttack(heldCard.name);
+      } else if (heldCard.type === "teleport") {
+        handleTeleport();
+      } else if (heldCard.type === "defense") {
+        handleDefense(heldCard.name);
+      }
+      
+      heldCard = null;
+      heldCardUsedThisLevel = true;
+      updateCardHolderBasket();
+      
+      enemyTurn();
+      drawGrid();
+      checkGameState();
+      if (gameState === "playing") {
+        drawHand();
+      }
+    }
+
+    // Add new function to restart current level
+    function restartLevel() {
+      // Reset level-specific variables but preserve score
+      movesUsed = 0;
+      enemiesDefeated = 0;
+      heldCardUsedThisLevel = false;
+      shieldOn = false;
+      gameState = "playing";
+      
+      // Re-initialize the current level
+      initLevel();
+      
+      // Update UI
+      updateMessage(`Level ${level} restarted. Choose a card to play.`);
+    }
+
+    /***********************
+     * DYNAMIC BACKGROUND ELEMENTS
+     ***********************/
+    let timeOfDay = 0; // 0-1 representing time cycle
+    let cycleSpeed = 0.0002; // How fast day changes to night
+    let weatherType = "clear"; // clear, rain, fireflies, leaves
+    let weatherChangeTimer = 0;
+    let clouds = [];
+    let backgroundParticles = [];
+    let raindrops = [];
+    let fireflies = [];
+    let leaves = [];
+    let isBackgroundInitialized = false;
+
+    function initDynamicBackground() {
+      if (isBackgroundInitialized) return;
+      isBackgroundInitialized = true;
+      
+      console.log("Initializing dynamic background");
+      
+      // Create background layer if it doesn't exist
+      if (!document.querySelector('.background-layer')) {
+        const backgroundLayer = document.createElement('div');
+        backgroundLayer.className = 'background-layer';
+        document.body.appendChild(backgroundLayer);
+      }
+      
+      // Initialize clouds
+      createClouds();
+      
+      // Initialize ambient particles
+      createAmbientParticles();
+      
+      // Set random weather initially
+      changeWeather();
+      
+      // Change weather periodically
+      setInterval(changeWeather, 30000); // Change weather every 30 seconds
+      
+      // Start the animation loop
+      requestAnimationFrame(updateBackground);
+    }
+
+    function createClouds() {
+      // Remove existing clouds
+      clouds.forEach(cloud => {
+        if (cloud.element && cloud.element.parentNode) {
+          cloud.element.remove();
+        }
+      });
+      clouds = [];
+      
+      // Create new clouds
+      const cloudCount = 5 + Math.floor(Math.random() * 5);
+      for (let i = 0; i < cloudCount; i++) {
+        const cloud = {
+          element: document.createElement('div'),
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * (window.innerHeight * 0.5),
+          speed: 0.1 + Math.random() * 0.2,
+          size: 50 + Math.random() * 100,
+          opacity: 0.3 + Math.random() * 0.3
+        };
+        
+        cloud.element.className = 'cloud';
+        cloud.element.style.width = cloud.size + 'px';
+        cloud.element.style.height = cloud.size * 0.6 + 'px';
+        cloud.element.style.opacity = cloud.opacity;
+        cloud.element.style.left = cloud.x + 'px';
+        cloud.element.style.top = cloud.y + 'px';
+        
+        document.body.appendChild(cloud.element);
+        clouds.push(cloud);
+      }
+    }
+
+    function createAmbientParticles() {
+      // Remove existing particles
+      backgroundParticles.forEach(particle => {
+        if (particle.element && particle.element.parentNode) {
+          particle.element.remove();
+        }
+      });
+      backgroundParticles = [];
+      
+      // Create new ambient particles
+      const particleCount = 30;
+      for (let i = 0; i < particleCount; i++) {
+        const particle = {
+          element: document.createElement('div'),
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight
+        };
+        
+        particle.element.className = 'floating-particle';
+        particle.element.style.width = (2 + Math.random() * 3) + 'px';
+        particle.element.style.height = (2 + Math.random() * 3) + 'px';
+        particle.element.style.opacity = (0.3 + Math.random() * 0.4);
+        particle.element.style.left = particle.x + 'px';
+        particle.element.style.top = particle.y + 'px';
+        
+        // Set animation properties
+        const animDuration = 15 + Math.random() * 20;
+        const tx = (Math.random() > 0.5 ? 1 : -1) * (100 + Math.random() * 200);
+        const ty = (Math.random() > 0.5 ? 1 : -1) * (100 + Math.random() * 200);
+        const rotation = Math.random() * 360;
+        
+        particle.element.style.setProperty('--tx', `${tx}px`);
+        particle.element.style.setProperty('--ty', `${ty}px`);
+        particle.element.style.setProperty('--rotation', `${rotation}deg`);
+        particle.element.style.animationDuration = `${animDuration}s`;
+        
+        document.body.appendChild(particle.element);
+        backgroundParticles.push(particle);
+        
+        // Reset position when animation completes
+        setTimeout(() => {
+          if (particle.element && particle.element.parentNode) {
+            particle.element.style.left = Math.random() * window.innerWidth + 'px';
+            particle.element.style.top = Math.random() * window.innerHeight + 'px';
             
-            // Update hand
-            playerHand.innerHTML = '';
-            gameState.player.hand.forEach(card => {
-                const cardElement = document.createElement('div');
-                cardElement.className = 'card';
-                cardElement.innerHTML = `
-                    <div class="card-emoji">${card.emoji}</div>
-                    <div class="card-name">${card.name}</div>
-                    <div class="card-cost">Cost: ${card.cost}</div>
-                `;
-                cardElement.onclick = () => playCard(card);
-                playerHand.appendChild(cardElement);
+            const newTx = (Math.random() > 0.5 ? 1 : -1) * (100 + Math.random() * 200);
+            const newTy = (Math.random() > 0.5 ? 1 : -1) * (100 + Math.random() * 200);
+            const newRotation = Math.random() * 360;
+            
+            particle.element.style.setProperty('--tx', `${newTx}px`);
+            particle.element.style.setProperty('--ty', `${newTy}px`);
+            particle.element.style.setProperty('--rotation', `${newRotation}deg`);
+          }
+        }, animDuration * 1000);
+      }
+    }
+
+    function createRain() {
+      // Remove existing raindrops
+      raindrops.forEach(drop => {
+        if (drop.element && drop.element.parentNode) {
+          drop.element.remove();
+        }
+      });
+      raindrops = [];
+      
+      // Create new raindrops
+      const dropCount = 100;
+      for (let i = 0; i < dropCount; i++) {
+        const drop = {
+          element: document.createElement('div'),
+          x: Math.random() * window.innerWidth,
+          speed: 10 + Math.random() * 10,
+          length: 10 + Math.random() * 15
+        };
+        
+        drop.element.className = 'rain-drop';
+        drop.element.style.left = drop.x + 'px';
+        drop.element.style.height = drop.length + 'px';
+        drop.element.style.animationDuration = (drop.speed / 10) + 's';
+        
+        document.body.appendChild(drop.element);
+        raindrops.push(drop);
+        
+        // Reset raindrop when animation completes
+        setTimeout(() => {
+          if (weatherType === "rain" && drop.element && drop.element.parentNode) {
+            drop.x = Math.random() * window.innerWidth;
+            drop.element.style.left = drop.x + 'px';
+          }
+        }, drop.speed * 100);
+      }
+    }
+
+    function createFireflies() {
+      // Remove existing fireflies
+      fireflies.forEach(fly => {
+        if (fly.element && fly.element.parentNode) {
+          fly.element.remove();
+        }
+      });
+      fireflies = [];
+      
+      // Create new fireflies
+      const flyCount = 20;
+      for (let i = 0; i < flyCount; i++) {
+        const fly = {
+          element: document.createElement('div'),
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          size: 2 + Math.random() * 2
+        };
+        
+        fly.element.className = 'firefly';
+        fly.element.style.left = fly.x + 'px';
+        fly.element.style.top = fly.y + 'px';
+        fly.element.style.width = fly.size + 'px';
+        fly.element.style.height = fly.size + 'px';
+        fly.element.style.animationDelay = (Math.random() * 15) + 's';
+        
+        document.body.appendChild(fly.element);
+        fireflies.push(fly);
+        
+        // Move fireflies randomly
+        setInterval(() => {
+          if (weatherType === "fireflies" && fly.element && fly.element.parentNode) {
+            const newX = Math.max(0, Math.min(window.innerWidth, fly.x + (-50 + Math.random() * 100)));
+            const newY = Math.max(0, Math.min(window.innerHeight, fly.y + (-50 + Math.random() * 100)));
+            fly.x = newX;
+            fly.y = newY;
+            fly.element.style.left = fly.x + 'px';
+            fly.element.style.top = fly.y + 'px';
+          }
+        }, 5000);
+      }
+    }
+
+    function createLeaves() {
+      // Remove existing leaves
+      leaves.forEach(leaf => {
+        if (leaf.element && leaf.element.parentNode) {
+          leaf.element.remove();
+        }
+      });
+      leaves = [];
+      
+      // Create new leaves
+      const leafCount = 15;
+      for (let i = 0; i < leafCount; i++) {
+        const leaf = {
+          element: document.createElement('div'),
+          x: Math.random() * window.innerWidth,
+          speed: 3 + Math.random() * 5,
+          size: 5 + Math.random() * 8,
+          hue: 100 + Math.random() * 40 // Green to yellow-green
+        };
+        
+        leaf.element.className = 'leaf';
+        leaf.element.style.left = leaf.x + 'px';
+        leaf.element.style.width = leaf.size + 'px';
+        leaf.element.style.height = leaf.size + 'px';
+        leaf.element.style.background = `hsl(${leaf.hue}, 70%, 50%)`;
+        leaf.element.style.animationDuration = leaf.speed + 's';
+        
+        document.body.appendChild(leaf.element);
+        leaves.push(leaf);
+        
+        // Reset leaf when it falls off screen
+        setInterval(() => {
+          if (weatherType === "leaves" && leaf.element && leaf.element.parentNode) {
+            leaf.x = Math.random() * window.innerWidth;
+            leaf.element.style.left = leaf.x + 'px';
+          }
+        }, leaf.speed * 1000);
+      }
+    }
+
+    function changeWeather() {
+      // Choose a random weather type
+      const weatherTypes = ["clear", "rain", "fireflies", "leaves"];
+      let newWeather;
+      
+      // Don't pick the same weather twice in a row
+      do {
+        newWeather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+      } while (newWeather === weatherType);
+      
+      console.log("Weather changing to:", newWeather);
+      weatherType = newWeather;
+      
+      // Clear previous weather elements
+      raindrops.forEach(drop => {
+        if (drop.element && drop.element.parentNode) {
+          drop.element.remove();
+        }
+      });
+      raindrops = [];
+      
+      fireflies.forEach(fly => {
+        if (fly.element && fly.element.parentNode) {
+          fly.element.remove();
+        }
+      });
+      fireflies = [];
+      
+      leaves.forEach(leaf => {
+        if (leaf.element && leaf.element.parentNode) {
+          leaf.element.remove();
+        }
+      });
+      leaves = [];
+      
+      // Create new weather elements
+      if (weatherType === "rain") {
+        createRain();
+      } else if (weatherType === "fireflies") {
+        createFireflies();
+      } else if (weatherType === "leaves") {
+        createLeaves();
+      }
+    }
+
+    function updateBackground() {
+      // Update time of day
+      timeOfDay = (timeOfDay + cycleSpeed) % 1;
+      
+      // Update background color based on time of day
+      const backgroundLayer = document.querySelector('.background-layer');
+      if (backgroundLayer) {
+        let r, g, b;
+        
+        if (timeOfDay < 0.25) { // Dawn
+          r = lerp(20, 70, timeOfDay * 4);
+          g = lerp(20, 40, timeOfDay * 4);
+          b = lerp(50, 80, timeOfDay * 4);
+        } else if (timeOfDay < 0.5) { // Day
+          r = lerp(70, 26, (timeOfDay - 0.25) * 4);
+          g = lerp(40, 33, (timeOfDay - 0.25) * 4);
+          b = lerp(80, 62, (timeOfDay - 0.25) * 4);
+        } else if (timeOfDay < 0.75) { // Dusk
+          r = lerp(26, 10, (timeOfDay - 0.5) * 4);
+          g = lerp(33, 10, (timeOfDay - 0.5) * 4);
+          b = lerp(62, 30, (timeOfDay - 0.5) * 4);
+        } else { // Night
+          r = lerp(10, 20, (timeOfDay - 0.75) * 4);
+          g = lerp(10, 20, (timeOfDay - 0.75) * 4);
+          b = lerp(30, 50, (timeOfDay - 0.75) * 4);
+        }
+        
+        backgroundLayer.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        
+        // Adjust star visibility based on time of day
+        const stars = document.querySelectorAll('.star');
+        const starOpacity = timeOfDay > 0.5 ? lerp(0, 1, (timeOfDay - 0.5) * 2) : lerp(1, 0, timeOfDay * 2);
+        stars.forEach(star => {
+          star.style.opacity = starOpacity;
+        });
+        
+        // Adjust cloud color based on time of day
+        clouds.forEach(cloud => {
+          if (cloud.element) {
+            let cloudColor;
+            if (timeOfDay < 0.25 || timeOfDay > 0.75) {
+              // Dawn/Night - darker clouds
+              cloudColor = `rgba(100, 100, 120, ${cloud.opacity * 0.7})`;
+            } else {
+              // Day - white clouds
+              cloudColor = `rgba(255, 255, 255, ${cloud.opacity})`;
+            }
+            cloud.element.style.background = cloudColor;
+          }
+        });
+        
+        // Show fireflies mainly at night
+        if (weatherType === "fireflies") {
+          const fireflyOpacity = timeOfDay > 0.5 ? 1 : 0.2;
+          fireflies.forEach(fly => {
+            if (fly.element) {
+              fly.element.style.opacity = fireflyOpacity;
+            }
+          });
+        }
+      }
+      
+      // Update cloud positions
+      clouds.forEach(cloud => {
+        if (cloud.element) {
+          cloud.x += cloud.speed;
+          if (cloud.x > window.innerWidth + cloud.size) {
+            cloud.x = -cloud.size;
+          }
+          cloud.element.style.left = cloud.x + 'px';
+        }
+      });
+      
+      requestAnimationFrame(updateBackground);
+    }
+
+    // Linear interpolation helper
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    // Function to check if player is adjacent to lava and apply damage effect
+    function checkLavaEffect() {
+      if (gameState !== "playing") return;
+      
+      // Find lava obstacles (type 2 is lava)
+      const lavaObstacles = obstacles.filter(o => obstacleTypes[o.type].effect === "burn");
+      
+      // Check if player is adjacent to any lava
+      const isAdjacentToLava = lavaObstacles.some(lava => 
+        Math.abs(lava.x - player.x) <= 1 && Math.abs(lava.y - player.y) <= 1
+      );
+      
+      if (isAdjacentToLava && !shieldOn) {
+        updateMessage("The heat from nearby lava damages you!");
+        
+        // Create visual effect for lava damage
+        createParticleEffect(
+          player.x * document.querySelector('.cell').offsetWidth + document.querySelector('.cell').offsetWidth/2,
+          player.y * document.querySelector('.cell').offsetHeight + document.querySelector('.cell').offsetHeight/2,
+          '#ff4500'
+        );
+        
+        // Reset shield if it was protecting player
+        shieldOn = false;
+      }
+    }
+
+    // Function to move portal obstacles randomly
+    function movePortalObstacles() {
+      // Only process for level 4 and above
+      if (level < 4) return;
+      
+      obstacles.forEach(obstacle => {
+        // Check if obstacle is a portal
+        if (obstacleTypes[obstacle.type].effect === "teleport") {
+          // 33% chance to move
+          if (Math.random() < 0.33) {
+            // Try to find a new position
+            let attempts = 0;
+            let moved = false;
+            
+            while (attempts < 10 && !moved) {
+              // Pick a random direction
+              const directions = [
+                {dx: 0, dy: -1}, // up
+                {dx: 0, dy: 1},  // down
+                {dx: -1, dy: 0}, // left
+                {dx: 1, dy: 0}   // right
+              ];
+              
+              const dir = directions[Math.floor(Math.random() * directions.length)];
+              const newX = obstacle.x + dir.dx;
+              const newY = obstacle.y + dir.dy;
+              
+              // Check if new position is valid
+              if (newX >= 0 && newX < gridWidth && 
+                  newY >= 0 && newY < gridHeight && 
+                  !isOccupied(newX, newY, obstacle)) {
+                
+                // Move the portal
+                obstacle.x = newX;
+                obstacle.y = newY;
+                moved = true;
+              }
+              
+              attempts++;
+            }
+          }
+        }
+      });
+    }
+
+    // Modified version to exclude the current obstacle from occupied check
+    function isOccupied(x, y, currentObstacle = null) {
+      // Check other obstacles
+      for (let o of obstacles) {
+        if (o !== currentObstacle && o.x === x && o.y === y) return true;
+      }
+      
+      // Check enemies
+      for (let e of enemies) {
+        if (e.x === x && e.y === y) return true;
+      }
+      
+      // Check player
+      if (player.x === x && player.y === y) return true;
+      
+      return false;
+    }
+
+    // First, make sure the button exists in the HTML
+    // Check if this HTML element is present in your game controls section:
+    // <button id="restartLevelButton" class="game-button small">Restart Level</button>
+
+    // If it's not present, you'll need to add it dynamically:
+    function initGameControls() {
+      const gameControls = document.querySelector('.game-controls');
+      
+      // Check if the restart level button already exists
+      if (!document.getElementById('restartLevelButton')) {
+        const restartLevelButton = document.createElement('button');
+        restartLevelButton.id = 'restartLevelButton';
+        restartLevelButton.className = 'game-button small';
+        restartLevelButton.textContent = 'Restart Level';
+        restartLevelButton.style.display = 'none'; // Hide initially
+        
+        // Insert after the main menu button
+        const mainMenuButton = document.getElementById('mainMenuButton');
+        if (mainMenuButton && mainMenuButton.parentNode) {
+          mainMenuButton.parentNode.insertBefore(restartLevelButton, mainMenuButton.nextSibling);
+        } else {
+          gameControls.appendChild(restartLevelButton);
+        }
+        
+        // Add click event listener
+        restartLevelButton.onclick = function() {
+          if (confirm('Restart this level? Current level progress will be lost.')) {
+            restartLevel();
+          }
+        };
+      }
+      
+      // Now make sure to show/hide it based on level
+      const restartLevelButton = document.getElementById('restartLevelButton');
+      if (restartLevelButton) {
+        restartLevelButton.style.display = level >= 4 ? 'inline-block' : 'none';
+      }
+    }
+
+    // Add these variables to track which cards have been explained
+    let tutorialShown = {
+      move: false,
+      teleport: false,
+      attack: false,
+      pauseEnemies: false,
+      shield: false
+    };
+
+    // Function to show tutorial for specific card types
+    function showCardTutorial() {
+      // Only show tutorials in level 1
+      if (level !== 1) return;
+      
+      // Check each card in hand for tutorial opportunities
+      hand.forEach((card, index) => {
+        // Skip if this card type has already been explained
+        if (card.type === "move" && tutorialShown.move) return;
+        if (card.type === "teleport" && tutorialShown.teleport) return;
+        if (card.type === "attack" && tutorialShown.attack) return;
+        if (card.name === "Pause Enemies" && tutorialShown.pauseEnemies) return;
+        if (card.name === "Shield" && tutorialShown.shield) return;
+        
+        // Mark this card type as explained
+        if (card.type === "move") tutorialShown.move = true;
+        if (card.type === "teleport") tutorialShown.teleport = true;
+        if (card.type === "attack") tutorialShown.attack = true;
+        if (card.name === "Pause Enemies") tutorialShown.pauseEnemies = true;
+        if (card.name === "Shield") tutorialShown.shield = true;
+        
+        // Get the card element
+        setTimeout(() => {
+          const cardElements = document.querySelectorAll('.card');
+          if (!cardElements || cardElements.length <= index) return;
+          const cardElement = cardElements[index];
+          
+          // Create tutorial overlay
+          const tutorial = document.createElement('div');
+          tutorial.className = 'tutorial-overlay';
+          
+          // Set tutorial content based on card type
+          let tutorialText = "";
+          if (card.type === "move") {
+            tutorialText = "Movement cards allow you to move in the specified direction. Use them to navigate the grid.";
+          } else if (card.type === "teleport") {
+            tutorialText = "The Teleport card will transport you to a random empty tile on the grid. Be careful - you might land near enemies!";
+          } else if (card.type === "attack") {
+            tutorialText = "Attack cards let you defeat enemies in adjacent tiles. Use them when enemies get too close!";
+          } else if (card.name === "Pause Enemies") {
+            tutorialText = "The Pause Enemies card freezes all enemies in place for one turn, giving you time to reposition.";
+          } else if (card.name === "Shield") {
+            tutorialText = "The Shield card protects you from enemies and freezes adjacent enemies for one turn.";
+          }
+          
+          tutorial.innerHTML = `
+            <div class="tutorial-content">
+              <p>${tutorialText}</p>
+              <button class="tutorial-close">Got it!</button>
+            </div>
+          `;
+          
+          // Position the tutorial near the card
+          const cardRect = cardElement.getBoundingClientRect();
+          tutorial.style.position = 'absolute';
+          tutorial.style.left = `${cardRect.left}px`;
+          tutorial.style.top = `${cardRect.bottom + 10}px`;
+          tutorial.style.zIndex = '1000';
+          
+          // Add highlight to the card
+          cardElement.classList.add('tutorial-highlight');
+          
+          // Add the tutorial to the page
+          document.body.appendChild(tutorial);
+          
+          // Add event listener to close button
+          const closeButton = tutorial.querySelector('.tutorial-close');
+          if (closeButton) {
+            closeButton.addEventListener('click', () => {
+              tutorial.remove();
+              cardElement.classList.remove('tutorial-highlight');
             });
-        }
-
-        function checkGameEnd() {
-            if (gameState.player.health <= 0) {
-                alert('Game Over! You lost!');
-                restartGame();
-            } else if (gameState.enemy.health <= 0) {
-                alert('Congratulations! You won!');
-                restartGame();
+          }
+          
+          // Auto-close after 10 seconds
+          setTimeout(() => {
+            if (tutorial.parentNode) {
+              tutorial.remove();
+              cardElement.classList.remove('tutorial-highlight');
             }
-        }
+          }, 10000);
+        }, 500); // Small delay to ensure cards are rendered
+      });
+    }
 
-        function restartGame() {
-            gameState.player.health = gameState.player.maxHealth;
-            gameState.player.mana = gameState.player.maxMana;
-            gameState.enemy.health = gameState.enemy.maxHealth;
-            gameState.player.hand = [];
-            gameState.currentTurn = 'player';
-            document.querySelector('.turn-indicator').textContent = 'Your Turn';
-            updateUI();
-        }
+    // Reset tutorial flags when starting a new game
+    const originalStartGame = startGame;
+    startGame = function() {
+      // Reset tutorial flags
+      tutorialShown = {
+        move: false,
+        teleport: false,
+        attack: false,
+        pauseEnemies: false,
+        shield: false
+      };
+      
+      // Call the original startGame function
+      originalStartGame();
+    };
 
-        // Initialize game
-        updateUI();
-    </script>
+    // Modify drawHand to call showCardTutorial after drawing the hand
+    const originalDrawHand = drawHand;
+    drawHand = function() {
+      // Call the original drawHand function
+      originalDrawHand();
+      
+      // Show card tutorials after updating the hand UI
+      setTimeout(showCardTutorial, 100);
+    };
+
+    /* Add this function after the game constants */
+    function updateScore(points, showAnimation = true) {
+      const scoreDisplay = document.querySelector('.score-value');
+      const scoreChange = document.querySelector('.score-change');
+      
+      if (points === 0) {
+        // Reset score
+        currentScore = 0;
+        scoreMultiplier = 1;
+      } else {
+        // Add points with multiplier
+        const pointsToAdd = points * scoreMultiplier;
+        currentScore += pointsToAdd;
+        scoreMultiplier += 0.1; // Increase multiplier for consecutive successful moves
+        
+        // Check and update high score
+        saveHighScore();
+      }
+      
+      // Update display
+      scoreDisplay.textContent = Math.floor(currentScore);
+      
+      // Show animation if points were added
+      if (showAnimation && points > 0) {
+        scoreChange.textContent = `+${Math.floor(points * scoreMultiplier)}`;
+        scoreChange.classList.remove('show');
+        void scoreChange.offsetWidth; // Trigger reflow
+        scoreChange.classList.add('show');
+        
+        // Remove animation class after animation completes
+        setTimeout(() => {
+          scoreChange.classList.remove('show');
+        }, 1000);
+      }
+    }
+
+    /* Add these variables in the game constants section */
+    let currentScore = 0;
+    let scoreMultiplier = 1;
+    let highScore = 0;
+
+    /* Add this function after the game constants */
+    function loadHighScore() {
+      const savedHighScore = localStorage.getItem('puzzleDungeonHighScore');
+      highScore = savedHighScore ? parseInt(savedHighScore) : 0;
+      updateHighScoreDisplay();
+    }
+
+    function saveHighScore() {
+      if (currentScore > highScore) {
+        highScore = currentScore;
+        localStorage.setItem('puzzleDungeonHighScore', highScore.toString());
+        updateHighScoreDisplay();
+      }
+    }
+
+    function updateHighScoreDisplay() {
+      const highScoreDisplay = document.querySelector('.high-score');
+      highScoreDisplay.textContent = Math.floor(highScore);
+    }
+  </script>
 </body>
-</html> 
+</html>
