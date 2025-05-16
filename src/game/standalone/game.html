@@ -127,7 +127,7 @@
       text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
       font-size: 14px;
       text-align: center;
-      background: url('assets/images/card_image.webp') center/cover;
+      background: url('../assets/images/card_image.webp') center/cover;
     }
     .card::after {
       content: '';
@@ -291,7 +291,7 @@
       left: 10px;
       width: 60px;
       height: 60px;
-      background-image: url('assets/images/dungeondeck_icon.webp');
+      background-image: url('../assets/images/dungeondeck_icon.webp');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -1250,30 +1250,30 @@
 <body>
   <!-- Add after opening body tag -->
   <audio id="backgroundMusic" loop>
-    <source src="assets/audio/retro-gaming-271301.mp3" type="audio/mpeg">
+    <source src="../assets/audio/retro-gaming-271301.mp3" type="audio/mpeg">
   </audio>
   <audio id="startButtonSound">
-    <source src="assets/audio/start.mp3" type="audio/mpeg">
+    <source src="../assets/audio/start.mp3" type="audio/mpeg">
   </audio>
   <!-- Add this after the existing audio elements -->
   <audio id="gameoverSound">
-    <source src="assets/audio/gameover.mp3" type="audio/mpeg">
+    <source src="../assets/audio/gameover.mp3" type="audio/mpeg">
   </audio>
   <!-- Add this after the existing audio elements -->
   <audio id="levelUpSound">
-    <source src="assets/audio/level-up.mp3" type="audio/mpeg">
+    <source src="../assets/audio/level-up.mp3" type="audio/mpeg">
   </audio>
   <!-- Add this after the existing audio elements -->
   <audio id="teleportSound">
-    <source src="assets/audio/game-teleport.mp3" type="audio/mpeg">
+    <source src="../assets/audio/game-teleport.mp3" type="audio/mpeg">
   </audio>
   <!-- Add this after the existing audio elements -->
   <audio id="attackFireSound">
-    <source src="assets/audio/attack-fire.mp3" type="audio/mpeg">
+    <source src="../assets/audio/attack-fire.mp3" type="audio/mpeg">
   </audio>
   <!-- Add this after the existing audio elements -->
   <audio id="cardSelectionSound">
-    <source src="assets/audio/cardselection.mp3" type="audio/mpeg">
+    <source src="../assets/audio/cardselection.mp3" type="audio/mpeg">
   </audio>
 
   <!-- Landing Page -->
@@ -1447,6 +1447,12 @@
   </div>
 
   <script>
+    // Add error handling to help debug
+    window.addEventListener('error', function(e) {
+      console.error('Global error caught:', e.error);
+      alert('Error: ' + e.error.message + '\nCheck console for details.');
+    });
+    
     /***********************
      * GAME CONSTANTS & VARIABLES
      ***********************/
@@ -1616,6 +1622,15 @@
      * GAME INITIALIZATION & LEVEL SETUP
      ***********************/
     function startGame() {
+      // Reset tutorial flags
+      tutorialShown = {
+        move: false,
+        teleport: false,
+        attack: false,
+        pauseEnemies: false,
+        shield: false
+      };
+      
       level = 1;
       movesUsed = 0;
       enemiesDefeated = 0;
@@ -2324,7 +2339,7 @@
       
       // Create image element
       const image = document.createElement('img');
-      image.src = isWin ? 'assets/images/youwin.png' : 'assets/images/gameover.png';
+      image.src = isWin ? '../assets/images/youwin.png' : '../assets/images/gameover.png';
       image.alt = isWin ? 'You Win!' : 'Game Over!';
       image.style.maxWidth = '80%';
       image.style.maxHeight = '60vh';
@@ -2426,40 +2441,31 @@
     });
 
     document.getElementById('startGameButton').addEventListener('click', () => {
-      // Play start button sound and pause background music temporarily
-      const startSound = document.getElementById('startButtonSound');
-      const bgMusic = document.getElementById('backgroundMusic');
-      
-      if (isMusicPlaying) {
-        bgMusic.pause();
-      }
-      
-      startSound.volume = volumeSlider.value / 100 || 0.3;
-      startSound.play().then(() => {
-        // When start sound finishes, resume background music if it was playing
-        startSound.addEventListener('ended', () => {
-          if (isMusicPlaying) {
-            bgMusic.play();
-          }
-        }, { once: true });
-        
-        createParticles();
-        maintainStars();
-        startGame(); // This will now call initDynamicBackground()
-      }).catch(error => {
-        console.log("Start sound playback failed:", error);
-        // If sound fails to play, still start the game
-        if (isMusicPlaying) {
-          bgMusic.play();
-        }
+      try {
+        console.log("Start button clicked");
+        // Simplify the start process
         createParticles();
         maintainStars();
         startGame();
-      });
-      
-      // If music wasn't already playing, toggle it on
-      if (!isMusicPlaying) {
-        toggleMusic();
+        
+        // Try to play audio after game has started
+        try {
+          const startSound = document.getElementById('startButtonSound');
+          if (startSound) {
+            startSound.volume = 0.3;
+            startSound.play().catch(e => console.log("Audio play failed:", e));
+          }
+          
+          if (!isMusicPlaying) {
+            toggleMusic();
+          }
+        } catch (audioError) {
+          console.log("Audio error:", audioError);
+          // Continue even if audio fails
+        }
+      } catch (error) {
+        console.error("Error starting game:", error);
+        alert("Error starting game: " + error.message);
       }
     });
 
@@ -2740,32 +2746,53 @@
     let isBackgroundInitialized = false;
 
     function initDynamicBackground() {
-      if (isBackgroundInitialized) return;
-      isBackgroundInitialized = true;
-      
-      console.log("Initializing dynamic background");
-      
-      // Create background layer if it doesn't exist
-      if (!document.querySelector('.background-layer')) {
-        const backgroundLayer = document.createElement('div');
-        backgroundLayer.className = 'background-layer';
-        document.body.appendChild(backgroundLayer);
+      try {
+        if (isBackgroundInitialized) return;
+        isBackgroundInitialized = true;
+        
+        console.log("Initializing dynamic background");
+        
+        // Create background layer if it doesn't exist
+        if (!document.querySelector('.background-layer')) {
+          const backgroundLayer = document.createElement('div');
+          backgroundLayer.className = 'background-layer';
+          document.body.appendChild(backgroundLayer);
+        }
+        
+        try {
+          // Initialize clouds
+          createClouds();
+        } catch (cloudError) {
+          console.error("Error creating clouds:", cloudError);
+        }
+        
+        try {
+          // Initialize ambient particles
+          createAmbientParticles();
+        } catch (particleError) {
+          console.error("Error creating ambient particles:", particleError);
+        }
+        
+        try {
+          // Set random weather initially
+          changeWeather();
+          
+          // Change weather periodically
+          setInterval(changeWeather, 30000); // Change weather every 30 seconds
+        } catch (weatherError) {
+          console.error("Error setting up weather:", weatherError);
+        }
+        
+        try {
+          // Start the animation loop
+          requestAnimationFrame(updateBackground);
+        } catch (animError) {
+          console.error("Error starting animation loop:", animError);
+        }
+      } catch (error) {
+        console.error("Error initializing dynamic background:", error);
+        // Continue game execution even if background fails
       }
-      
-      // Initialize clouds
-      createClouds();
-      
-      // Initialize ambient particles
-      createAmbientParticles();
-      
-      // Set random weather initially
-      changeWeather();
-      
-      // Change weather periodically
-      setInterval(changeWeather, 30000); // Change weather every 30 seconds
-      
-      // Start the animation loop
-      requestAnimationFrame(updateBackground);
     }
 
     function createClouds() {
@@ -3024,79 +3051,105 @@
     }
 
     function updateBackground() {
-      // Update time of day
-      timeOfDay = (timeOfDay + cycleSpeed) % 1;
-      
-      // Update background color based on time of day
-      const backgroundLayer = document.querySelector('.background-layer');
-      if (backgroundLayer) {
-        let r, g, b;
+      try {
+        // Update time of day
+        timeOfDay = (timeOfDay + cycleSpeed) % 1;
         
-        if (timeOfDay < 0.25) { // Dawn
-          r = lerp(20, 70, timeOfDay * 4);
-          g = lerp(20, 40, timeOfDay * 4);
-          b = lerp(50, 80, timeOfDay * 4);
-        } else if (timeOfDay < 0.5) { // Day
-          r = lerp(70, 26, (timeOfDay - 0.25) * 4);
-          g = lerp(40, 33, (timeOfDay - 0.25) * 4);
-          b = lerp(80, 62, (timeOfDay - 0.25) * 4);
-        } else if (timeOfDay < 0.75) { // Dusk
-          r = lerp(26, 10, (timeOfDay - 0.5) * 4);
-          g = lerp(33, 10, (timeOfDay - 0.5) * 4);
-          b = lerp(62, 30, (timeOfDay - 0.5) * 4);
-        } else { // Night
-          r = lerp(10, 20, (timeOfDay - 0.75) * 4);
-          g = lerp(10, 20, (timeOfDay - 0.75) * 4);
-          b = lerp(30, 50, (timeOfDay - 0.75) * 4);
+        // Update background color based on time of day
+        const backgroundLayer = document.querySelector('.background-layer');
+        if (backgroundLayer) {
+          try {
+            let r, g, b;
+            
+            if (timeOfDay < 0.25) { // Dawn
+              r = lerp(20, 70, timeOfDay * 4);
+              g = lerp(20, 40, timeOfDay * 4);
+              b = lerp(50, 80, timeOfDay * 4);
+            } else if (timeOfDay < 0.5) { // Day
+              r = lerp(70, 26, (timeOfDay - 0.25) * 4);
+              g = lerp(40, 33, (timeOfDay - 0.25) * 4);
+              b = lerp(80, 62, (timeOfDay - 0.25) * 4);
+            } else if (timeOfDay < 0.75) { // Dusk
+              r = lerp(26, 10, (timeOfDay - 0.5) * 4);
+              g = lerp(33, 10, (timeOfDay - 0.5) * 4);
+              b = lerp(62, 30, (timeOfDay - 0.5) * 4);
+            } else { // Night
+              r = lerp(10, 20, (timeOfDay - 0.75) * 4);
+              g = lerp(10, 20, (timeOfDay - 0.75) * 4);
+              b = lerp(30, 50, (timeOfDay - 0.75) * 4);
+            }
+            
+            backgroundLayer.style.backgroundColor = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+          } catch (colorError) {
+            console.error("Error updating background color:", colorError);
+          }
+          
+          try {
+            // Adjust star visibility based on time of day
+            const stars = document.querySelectorAll('.star');
+            const starOpacity = timeOfDay > 0.5 ? lerp(0, 1, (timeOfDay - 0.5) * 2) : lerp(1, 0, timeOfDay * 2);
+            stars.forEach(star => {
+              star.style.opacity = starOpacity;
+            });
+          } catch (starError) {
+            console.error("Error updating stars:", starError);
+          }
+          
+          try {
+            // Adjust cloud color based on time of day
+            clouds.forEach(cloud => {
+              if (cloud.element) {
+                let cloudColor;
+                if (timeOfDay < 0.25 || timeOfDay > 0.75) {
+                  // Dawn/Night - darker clouds
+                  cloudColor = `rgba(100, 100, 120, ${cloud.opacity * 0.7})`;
+                } else {
+                  // Day - white clouds
+                  cloudColor = `rgba(255, 255, 255, ${cloud.opacity})`;
+                }
+                cloud.element.style.background = cloudColor;
+              }
+            });
+          } catch (cloudError) {
+            console.error("Error updating clouds:", cloudError);
+          }
+          
+          try {
+            // Show fireflies mainly at night
+            if (weatherType === "fireflies") {
+              const fireflyOpacity = timeOfDay > 0.5 ? 1 : 0.2;
+              fireflies.forEach(fly => {
+                if (fly.element) {
+                  fly.element.style.opacity = fireflyOpacity;
+                }
+              });
+            }
+          } catch (fireflyError) {
+            console.error("Error updating fireflies:", fireflyError);
+          }
         }
         
-        backgroundLayer.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-        
-        // Adjust star visibility based on time of day
-        const stars = document.querySelectorAll('.star');
-        const starOpacity = timeOfDay > 0.5 ? lerp(0, 1, (timeOfDay - 0.5) * 2) : lerp(1, 0, timeOfDay * 2);
-        stars.forEach(star => {
-          star.style.opacity = starOpacity;
-        });
-        
-        // Adjust cloud color based on time of day
-        clouds.forEach(cloud => {
-          if (cloud.element) {
-            let cloudColor;
-            if (timeOfDay < 0.25 || timeOfDay > 0.75) {
-              // Dawn/Night - darker clouds
-              cloudColor = `rgba(100, 100, 120, ${cloud.opacity * 0.7})`;
-            } else {
-              // Day - white clouds
-              cloudColor = `rgba(255, 255, 255, ${cloud.opacity})`;
-            }
-            cloud.element.style.background = cloudColor;
-          }
-        });
-        
-        // Show fireflies mainly at night
-        if (weatherType === "fireflies") {
-          const fireflyOpacity = timeOfDay > 0.5 ? 1 : 0.2;
-          fireflies.forEach(fly => {
-            if (fly.element) {
-              fly.element.style.opacity = fireflyOpacity;
+        try {
+          // Update cloud positions
+          clouds.forEach(cloud => {
+            if (cloud.element) {
+              cloud.x += cloud.speed;
+              if (cloud.x > window.innerWidth + cloud.size) {
+                cloud.x = -cloud.size;
+              }
+              cloud.element.style.left = cloud.x + 'px';
             }
           });
+        } catch (cloudMoveError) {
+          console.error("Error moving clouds:", cloudMoveError);
         }
+        
+        requestAnimationFrame(updateBackground);
+      } catch (error) {
+        console.error("Error in updateBackground:", error);
+        // Try to continue animation loop despite errors
+        requestAnimationFrame(updateBackground);
       }
-      
-      // Update cloud positions
-      clouds.forEach(cloud => {
-        if (cloud.element) {
-          cloud.x += cloud.speed;
-          if (cloud.x > window.innerWidth + cloud.size) {
-            cloud.x = -cloud.size;
-          }
-          cloud.element.style.left = cloud.x + 'px';
-        }
-      });
-      
-      requestAnimationFrame(updateBackground);
     }
 
     // Linear interpolation helper
