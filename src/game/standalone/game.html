@@ -127,7 +127,7 @@
       text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
       font-size: 14px;
       text-align: center;
-      background: url('card_image.webp') center/cover;
+      background: url('assets/images/card_image.webp') center/cover;
     }
     .card::after {
       content: '';
@@ -291,7 +291,7 @@
       left: 10px;
       width: 60px;
       height: 60px;
-      background-image: url('dungeondeck_icon.webp');
+      background-image: url('assets/images/dungeondeck_icon.webp');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -1250,30 +1250,30 @@
 <body>
   <!-- Add after opening body tag -->
   <audio id="backgroundMusic" loop>
-    <source src="retro-gaming-271301.mp3" type="audio/mpeg">
+    <source src="assets/audio/retro-gaming-271301.mp3" type="audio/mpeg">
   </audio>
   <audio id="startButtonSound">
-    <source src="start.mp3" type="audio/mpeg">
+    <source src="assets/audio/start.mp3" type="audio/mpeg">
   </audio>
   <!-- Add this after the existing audio elements -->
   <audio id="gameoverSound">
-    <source src="gameover.mp3" type="audio/mpeg">
+    <source src="assets/audio/gameover.mp3" type="audio/mpeg">
   </audio>
   <!-- Add this after the existing audio elements -->
   <audio id="levelUpSound">
-    <source src="level-up.mp3" type="audio/mpeg">
+    <source src="assets/audio/level-up.mp3" type="audio/mpeg">
   </audio>
   <!-- Add this after the existing audio elements -->
   <audio id="teleportSound">
-    <source src="game-teleport.mp3" type="audio/mpeg">
+    <source src="assets/audio/game-teleport.mp3" type="audio/mpeg">
   </audio>
   <!-- Add this after the existing audio elements -->
   <audio id="attackFireSound">
-    <source src="attack-fire.mp3" type="audio/mpeg">
+    <source src="assets/audio/attack-fire.mp3" type="audio/mpeg">
   </audio>
   <!-- Add this after the existing audio elements -->
   <audio id="cardSelectionSound">
-    <source src="cardselection.mp3" type="audio/mpeg">
+    <source src="assets/audio/cardselection.mp3" type="audio/mpeg">
   </audio>
 
   <!-- Landing Page -->
@@ -2324,7 +2324,7 @@
       
       // Create image element
       const image = document.createElement('img');
-      image.src = isWin ? 'youwin.png' : 'gameover.png';
+      image.src = isWin ? 'assets/images/youwin.png' : 'assets/images/gameover.png';
       image.alt = isWin ? 'You Win!' : 'Game Over!';
       image.style.maxWidth = '80%';
       image.style.maxHeight = '60vh';
